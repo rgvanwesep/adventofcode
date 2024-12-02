@@ -15,16 +15,11 @@ const (
 	UNSET
 )
 
-func CountSafeReports(inputs []string) uint64 {
+func ParseReports(inputs []string) [][]int64 {
 	var (
-		count         uint64 = 0
-		level         int64
-		diff          int64
-		isDiffInRange bool
-		direction     int
-		err           error
+		level int64
+		err   error
 	)
-
 	reports := make([][]int64, 0)
 	for _, input := range inputs {
 		inputSplit := strings.Split(input, " ")
@@ -38,7 +33,15 @@ func CountSafeReports(inputs []string) uint64 {
 		}
 		reports = append(reports, levels)
 	}
+	return reports
+}
 
+func AssignRatings(reports [][]int64) []int {
+	var (
+		diff          int64
+		isDiffInRange bool
+		direction     int
+	)
 	ratings := make([]int, len(reports))
 	for i, levels := range reports {
 		direction = UNSET
@@ -70,7 +73,13 @@ func CountSafeReports(inputs []string) uint64 {
 			ratings[i] = SAFE
 		}
 	}
+	return ratings
+}
 
+func CountSafeReports(inputs []string) uint64 {
+	var count uint64 = 0
+	reports := ParseReports(inputs)
+	ratings := AssignRatings(reports)
 	for _, rating := range ratings {
 		if rating == SAFE {
 			count++
