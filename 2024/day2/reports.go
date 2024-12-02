@@ -36,42 +36,46 @@ func ParseReports(inputs []string) [][]int64 {
 	return reports
 }
 
-func AssignRatings(reports [][]int64) []int {
+func RateLevels(levels []int64) int {
 	var (
 		diff          int64
 		isDiffInRange bool
-		direction     int
 	)
+	direction := UNSET
+	rating := UNSET
+	for j := 0; j < len(levels)-1; j++ {
+		diff = levels[j+1] - levels[j]
+		if direction == UNSET {
+			if diff < 0 {
+				direction = DECREASING
+			} else if diff > 0 {
+				direction = INCREASING
+			} else {
+				direction = STEADY
+			}
+		}
+
+		if (direction == DECREASING && diff < 0 && diff >= -3) || (direction == INCREASING && diff > 0 && diff <= 3) {
+			isDiffInRange = true
+		} else {
+			isDiffInRange = false
+		}
+
+		if !isDiffInRange {
+			rating = UNSAFE
+			break
+		}
+	}
+	if rating == UNSET {
+		rating = SAFE
+	}
+	return rating
+}
+
+func AssignRatings(reports [][]int64) []int {
 	ratings := make([]int, len(reports))
 	for i, levels := range reports {
-		direction = UNSET
-		ratings[i] = UNSET
-		for j := 0; j < len(levels)-1; j++ {
-			diff = levels[j+1] - levels[j]
-			if direction == UNSET {
-				if diff < 0 {
-					direction = DECREASING
-				} else if diff > 0 {
-					direction = INCREASING
-				} else {
-					direction = STEADY
-				}
-			}
-
-			if (direction == DECREASING && diff < 0 && diff >= -3) || (direction == INCREASING && diff > 0 && diff <= 3) {
-				isDiffInRange = true
-			} else {
-				isDiffInRange = false
-			}
-
-			if !isDiffInRange {
-				ratings[i] = UNSAFE
-				break
-			}
-		}
-		if ratings[i] == UNSET {
-			ratings[i] = SAFE
-		}
+		ratings[i] = RateLevels(levels)
 	}
 	return ratings
 }
