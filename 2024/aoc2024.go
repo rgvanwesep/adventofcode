@@ -2,6 +2,7 @@ package main
 
 import (
 	"aoc2024/day1"
+	"aoc2024/day2"
 	"bufio"
 	"flag"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"os"
 	"runtime"
 	"runtime/pprof"
+	"strings"
 )
 
 func main() {
@@ -38,7 +40,7 @@ func main() {
 	inputLines := make([]string, 0)
 	for {
 		line, err := reader.ReadString('\n')
-		inputLines = append(inputLines, line)
+		inputLines = append(inputLines, strings.TrimRight(line, "\n"))
 		if err != nil {
 			break
 		}
@@ -52,6 +54,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day1.SumDistances(inputLines)))
 	case [2]int{1, 2}:
 		writer.WriteString(fmt.Sprintln(day1.CalcSimilarity(inputLines)))
+	case [2]int{2, 1}:
+		writer.WriteString(fmt.Sprintln(day2.CountSafeReports(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
