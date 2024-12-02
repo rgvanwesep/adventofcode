@@ -56,6 +56,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day1.CalcSimilarity(inputLines)))
 	case [2]int{2, 1}:
 		writer.WriteString(fmt.Sprintln(day2.CountSafeReports(inputLines)))
+	case [2]int{2, 2}:
+		writer.WriteString(fmt.Sprintln(day2.CountSafeReportsDamped(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}

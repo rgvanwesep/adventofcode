@@ -2,6 +2,7 @@ package day2
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -80,10 +81,46 @@ func AssignRatings(reports [][]int64) []int {
 	return ratings
 }
 
+func AssignRatingsDamped(reports [][]int64) []int {
+	ratings := make([]int, len(reports))
+	for i, levels := range reports {
+		rating := RateLevels(levels)
+		if rating == UNSAFE {
+			for j := range levels {
+				if j == 0 {
+					rating = RateLevels(levels[1:])
+				} else if j == len(levels)-1 {
+					rating = RateLevels(levels[:len(levels)-1])
+				} else {
+					rating = RateLevels(append(slices.Clone(levels[:j]), levels[j+1:]...))
+				}
+				if rating == SAFE {
+					break
+				}
+			}
+		}
+		ratings[i] = rating
+	}
+	return ratings
+}
+
 func CountSafeReports(inputs []string) uint64 {
 	var count uint64 = 0
 	reports := ParseReports(inputs)
 	ratings := AssignRatings(reports)
+	for _, rating := range ratings {
+		if rating == SAFE {
+			count++
+		}
+	}
+
+	return count
+}
+
+func CountSafeReportsDamped(inputs []string) uint64 {
+	var count uint64 = 0
+	reports := ParseReports(inputs)
+	ratings := AssignRatingsDamped(reports)
 	for _, rating := range ratings {
 		if rating == SAFE {
 			count++
