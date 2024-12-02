@@ -22,7 +22,7 @@ func TestSumDistances(t *testing.T) {
 	for _, c := range cases {
 		result := SumDistances(c.inputs)
 		if result != c.expected {
-			t.Errorf("Sum(%v) == %d, expected %d", c.inputs, result, c.expected)
+			t.Errorf("SumDistances(%v) == %d, expected %d", c.inputs, result, c.expected)
 		}
 	}
 }
@@ -47,7 +47,7 @@ func TestCalcSimilarity(t *testing.T) {
 	for _, c := range cases {
 		result := CalcSimilarity(c.inputs)
 		if result != c.expected {
-			t.Errorf("Sum(%v) == %d, expected %d", c.inputs, result, c.expected)
+			t.Errorf("CalcSimilarity(%v) == %d, expected %d", c.inputs, result, c.expected)
 		}
 	}
 }
