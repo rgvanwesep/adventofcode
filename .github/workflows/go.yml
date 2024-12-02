@@ -24,8 +24,14 @@ jobs:
     - name: Check Format
       run: ./scripts/check-format.sh
 
-    - name: Build
+    - name: Build 2023
       run: go build -C 2023 -v ./...
 
-    - name: Test
+    - name: Test 2023
       run: go test -C 2023 -v ./...
+
+    - name: Build 2024
+      run: go build -C 2024 -v ./...
+
+    - name: Test 2024
+      run: go test -C 2024 -v ./...
