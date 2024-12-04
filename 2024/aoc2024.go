@@ -4,6 +4,7 @@ import (
 	"aoc2024/day1"
 	"aoc2024/day2"
 	"aoc2024/day3"
+	"aoc2024/day4"
 	"bufio"
 	"flag"
 	"fmt"
@@ -63,6 +64,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day3.SumMul(inputLines)))
 	case [2]int{3, 2}:
 		writer.WriteString(fmt.Sprintln(day3.SumConditionalMul(inputLines)))
+	case [2]int{4, 1}:
+		writer.WriteString(fmt.Sprintln(day4.CountOccurances(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
