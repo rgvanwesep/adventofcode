@@ -66,6 +66,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day3.SumConditionalMul(inputLines)))
 	case [2]int{4, 1}:
 		writer.WriteString(fmt.Sprintln(day4.CountOccurances(inputLines)))
+	case [2]int{4, 2}:
+		writer.WriteString(fmt.Sprintln(day4.CountOccurancesX(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}

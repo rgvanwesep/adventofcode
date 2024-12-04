@@ -55,6 +55,33 @@ func Neighbors(pos [2]int, nrows int, ncols int) [][2]int {
 	return neighbors
 }
 
+func Diagonals(pos [2]int, nrows int, ncols int) [][2]int {
+	var (
+		diagonals [][2]int
+		x, y      int
+	)
+	x, y = pos[0], pos[1]
+	/*
+	 * 0.2
+	 * ...
+	 * 1.3
+	 */
+	maybeDiagonals := [][2]int{
+		{x - 1, y - 1},
+		{x - 1, y + 1},
+		{x + 1, y - 1},
+		{x + 1, y + 1},
+	}
+	diagonals = make([][2]int, 0)
+	for _, maybeNeighbor := range maybeDiagonals {
+		x, y = maybeNeighbor[0], maybeNeighbor[1]
+		if x >= 0 && x < nrows && y >= 0 && y < ncols {
+			diagonals = append(diagonals, maybeNeighbor)
+		}
+	}
+	return diagonals
+}
+
 func FindEnd(grid [][]byte, posM [2]int, direction int) [][2]int {
 	var (
 		end           [2]int
@@ -124,12 +151,9 @@ func FindEnd(grid [][]byte, posM [2]int, direction int) [][2]int {
 	return [][2]int{end}
 }
 
-func ExtendM(grid [][]byte, posX [2]int, posM [2]int) [][2]int {
-	var (
-		maybeEnd  [][2]int
-		direction int
-	)
-	switch diff := [2]int{posM[0] - posX[0], posM[1] - posX[1]}; diff {
+func FindDirection(start, end [2]int) int {
+	var direction int
+	switch diff := [2]int{end[0] - start[0], end[1] - start[1]}; diff {
 	case [2]int{0, -1}:
 		direction = UP
 	case [2]int{0, 1}:
@@ -147,8 +171,17 @@ func ExtendM(grid [][]byte, posX [2]int, posM [2]int) [][2]int {
 	case [2]int{1, 1}:
 		direction = DOWN_RIGHT
 	default:
-		panic(fmt.Sprintf("Invalid direction for (%v, %v)", posM, posX))
+		panic(fmt.Sprintf("Invalid direction for (%v, %v)", start, end))
 	}
+	return direction
+}
+
+func ExtendM(grid [][]byte, posX [2]int, posM [2]int) [][2]int {
+	var (
+		maybeEnd  [][2]int
+		direction int
+	)
+	direction = FindDirection(posX, posM)
 	maybeEnd = FindEnd(grid, posM, direction)
 	return maybeEnd
 }
@@ -180,6 +213,73 @@ func CountOccurances(inputs []string) int {
 			if char == X {
 				ends := ExtendX(grid, [2]int{j, i})
 				count += len(ends)
+			}
+		}
+	}
+	return count
+}
+
+func ExtendA(grid [][]byte, pos [2]int) bool {
+	/*
+	 * 0.2
+	 * ...
+	 * 1.3
+	 */
+	diagonals := Diagonals(pos, len(grid), len(grid[0]))
+	if len(diagonals) != 4 {
+		return false
+	}
+	chars := make([]byte, 4)
+	for i, diagonal := range diagonals {
+		x, y := diagonal[0], diagonal[1]
+		chars[i] = grid[y][x]
+	}
+	validChars := [4][]byte{
+		/*
+		 * M.M
+		 * ...
+		 * S.S
+		 */
+		{M, S, M, S},
+		/*
+		 * M.S
+		 * ...
+		 * M.S
+		 */
+		{M, M, S, S},
+		/*
+		 * S.M
+		 * ...
+		 * S.M
+		 */
+		{S, S, M, M},
+		/*
+		 * S.S
+		 * ...
+		 * M.M
+		 */
+		{S, M, S, M},
+	}
+	for _, valid := range validChars {
+		if string(valid) == string(chars) {
+			return true
+		}
+	}
+	return false
+}
+
+func CountOccurancesX(inputs []string) int {
+	var (
+		count int
+		grid  [][]byte
+	)
+	grid = ParseGrid(inputs)
+	for i, row := range grid {
+		for j, char := range row {
+			if char == A {
+				if ExtendA(grid, [2]int{j, i}) {
+					count++
+				}
 			}
 		}
 	}
