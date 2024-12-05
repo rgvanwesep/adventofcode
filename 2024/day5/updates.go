@@ -35,6 +35,16 @@ func NewUpdate(pages []int) Update {
 	return Update{pages, index, middle}
 }
 
+func (u *Update) SwapUsing(r Rule) {
+	if first, ok := u.index[r.before]; ok {
+		if second, ok := u.index[r.after]; ok {
+			u.pages[first], u.pages[second] = u.pages[second], u.pages[first]
+			u.index[r.before], u.index[r.after] = u.index[r.after], u.index[r.before]
+			u.middle = u.pages[len(u.pages)/2]
+		}
+	}
+}
+
 type UpdateInstructions struct {
 	rules   []Rule
 	updates []Update
@@ -93,6 +103,33 @@ func SumMiddlePages(inputs []string) int {
 			}
 		}
 		if isValid {
+			sum += update.middle
+		}
+	}
+	return sum
+}
+
+func SumCorrectedMiddlePages(inputs []string) int {
+	sum := 0
+	instructions := ParseUpdateInstructions(inputs)
+	for _, update := range instructions.updates {
+		isValid := true
+		for _, rule := range instructions.rules {
+			if !rule.Apply(update) {
+				isValid = false
+				break
+			}
+		}
+		if !isValid {
+			for !isValid {
+				isValid = true
+				for _, rule := range instructions.rules {
+					if !rule.Apply(update) {
+						isValid = false
+						update.SwapUsing(rule)
+					}
+				}
+			}
 			sum += update.middle
 		}
 	}
