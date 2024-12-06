@@ -6,6 +6,7 @@ import (
 	"aoc2024/day3"
 	"aoc2024/day4"
 	"aoc2024/day5"
+	"aoc2024/day6"
 	"bufio"
 	"flag"
 	"fmt"
@@ -73,6 +74,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day5.SumMiddlePages(inputLines)))
 	case [2]int{5, 2}:
 		writer.WriteString(fmt.Sprintln(day5.SumCorrectedMiddlePages(inputLines)))
+	case [2]int{6, 1}:
+		writer.WriteString(fmt.Sprintln(day6.CountVisited(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
