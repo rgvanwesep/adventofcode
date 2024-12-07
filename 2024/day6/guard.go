@@ -3,6 +3,7 @@ package day6
 import (
 	"fmt"
 	"maps"
+	"slices"
 )
 
 const (
@@ -35,23 +36,36 @@ func (o Optional[T]) GetValue() T {
 	return o[0]
 }
 
+type State struct {
+	coordinates Coordinates
+	direction   rune
+}
+
 type Guard struct {
-	direction rune
+	direction   rune
+	history     []State
+	stateCounts map[State]int
 }
 
 func (g Guard) Turned() Guard {
-	var gTurned Guard
+	var (
+		dNext rune
+		sNext State
+	)
+	lastState := g.history[len(g.history)-1]
 	switch g.direction {
 	case UP:
-		gTurned = Guard{RIGHT}
+		dNext = RIGHT
 	case DOWN:
-		gTurned = Guard{LEFT}
+		dNext = LEFT
 	case LEFT:
-		gTurned = Guard{UP}
+		dNext = UP
 	case RIGHT:
-		gTurned = Guard{DOWN}
+		dNext = DOWN
 	}
-	return gTurned
+	sNext = State{lastState.coordinates, dNext}
+	g.stateCounts[sNext]++
+	return Guard{dNext, append(g.history, sNext), g.stateCounts}
 }
 
 type Coordinates struct {
@@ -61,19 +75,31 @@ type Coordinates struct {
 type Square struct {
 	guard    Optional[Guard]
 	occupant rune
-	visted   bool
+	visited  bool
 }
 
 type Grid struct {
-	nrows, ncols      int
-	nguards, nvisited int
-	squares           map[Coordinates]Square
-	guardCoords       []Coordinates
+	nrows, ncols               int
+	nguards, nvisited, ncycled int
+	squares                    map[Coordinates]Square
+	guardCoords                []Coordinates
 }
 
 func NewGrid(nrows, ncols int) Grid {
 	squares := make(map[Coordinates]Square)
-	return Grid{nrows, ncols, 0, 0, squares, []Coordinates{}}
+	return Grid{nrows, ncols, 0, 0, 0, squares, []Coordinates{}}
+}
+
+func (g Grid) Clone() Grid {
+	return Grid{
+		g.nrows,
+		g.ncols,
+		g.nguards,
+		g.nvisited,
+		g.ncycled,
+		maps.Clone(g.squares),
+		slices.Clone(g.guardCoords),
+	}
 }
 
 func (g *Grid) AddSquare(c Coordinates, s Square) {
@@ -106,20 +132,30 @@ func (g *Grid) Step() {
 			cNext = Coordinates{c.x + 1, c.y}
 		}
 		if cNext.x < 0 || cNext.x >= g.ncols || cNext.y < 0 || cNext.y >= g.nrows {
-			updates[c] = Square{None[Guard](), s.occupant, s.visted}
+			updates[c] = Square{None[Guard](), s.occupant, s.visited}
 			g.nguards--
 		} else {
 			sNext = g.squares[cNext]
 			if sNext.occupant == OBSTRUCTION {
 				gNext = s.guard.GetValue().Turned()
-				updates[c] = Square{Some(gNext), s.occupant, s.visted}
+				if gNext.stateCounts[State{c, gNext.direction}] > 1 {
+					g.ncycled++
+				}
+				updates[c] = Square{Some(gNext), s.occupant, s.visited}
 				newGuardCoords = append(newGuardCoords, c)
 			} else {
-				gNext = s.guard.GetValue()
-				updates[c] = Square{None[Guard](), s.occupant, s.visted}
+				d := s.guard.GetValue().direction
+				h := s.guard.GetValue().history
+				state := State{cNext, d}
+				s.guard.GetValue().stateCounts[state]++
+				gNext = Guard{d, append(h, state), s.guard.GetValue().stateCounts}
+				if gNext.stateCounts[state] > 1 {
+					g.ncycled++
+				}
+				updates[c] = Square{None[Guard](), s.occupant, s.visited}
 				updates[cNext] = Square{Some(gNext), sNext.occupant, true}
 				newGuardCoords = append(newGuardCoords, cNext)
-				if !g.squares[cNext].visted {
+				if !g.squares[cNext].visited {
 					g.nvisited++
 				}
 			}
@@ -155,7 +191,17 @@ func ParseGrid(inputs []string) Grid {
 			var s Square
 			switch char {
 			case UP, DOWN, LEFT, RIGHT:
-				s = Square{Some(Guard{char}), EMPTY, true}
+				s = Square{
+					Some(
+						Guard{
+							char,
+							[]State{{c, char}},
+							map[State]int{{c, char}: 1},
+						},
+					),
+					EMPTY,
+					true,
+				}
 			case EMPTY:
 				s = Square{None[Guard](), EMPTY, false}
 			case OBSTRUCTION:
@@ -175,4 +221,27 @@ func CountVisited(inputs []string) int {
 		grid.Step()
 	}
 	return grid.nvisited
+}
+
+func CountCyclingObstructions(inputs []string) int {
+	count := 0
+	grid := ParseGrid(inputs)
+	grids := make([]Grid, 0)
+	for c, s := range grid.squares {
+		if s.guard.IsNone() && s.occupant == EMPTY {
+			newGrid := grid.Clone()
+			newGrid.AddSquare(c, Square{None[Guard](), OBSTRUCTION, false})
+			grids = append(grids, newGrid)
+		}
+	}
+	for _, g := range grids {
+		for g.nguards > 0 {
+			grid.Step()
+			if g.ncycled > 0 {
+				count++
+				break
+			}
+		}
+	}
+	return count
 }
