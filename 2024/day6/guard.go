@@ -2,6 +2,7 @@ package day6
 
 import (
 	"fmt"
+	"log"
 	"maps"
 )
 
@@ -69,11 +70,12 @@ type Grid struct {
 	nguards, nvisited int
 	squares           map[Coordinates]Square
 	guardCoords       []Coordinates
+	stateCounts       map[string]int
 }
 
 func NewGrid(nrows, ncols int) Grid {
 	squares := make(map[Coordinates]Square)
-	return Grid{nrows, ncols, 0, 0, squares, []Coordinates{}}
+	return Grid{nrows, ncols, 0, 0, squares, []Coordinates{}, map[string]int{}}
 }
 
 func (g *Grid) AddSquare(c Coordinates, s Square) {
@@ -175,4 +177,54 @@ func CountVisited(inputs []string) int {
 		grid.Step()
 	}
 	return grid.nvisited
+}
+
+func InputsToRunes(inputs []string) [][]rune {
+	runes := make([][]rune, len(inputs))
+	for i, input := range inputs {
+		runes[i] = make([]rune, len(input))
+		for j, r := range input {
+			runes[i][j] = r
+		}
+	}
+	return runes
+}
+
+func RunesToInputs(runes [][]rune) []string {
+	inputs := make([]string, len(runes))
+	for i, row := range runes {
+		inputs[i] = string(row)
+	}
+	return inputs
+}
+
+func CountCyclingObstructions(inputs []string) int {
+	count := 0
+	variations := make([][]string, 0)
+	for i := range len(inputs) {
+		for j := range len(inputs[0]) {
+			runes := InputsToRunes(inputs)
+			if runes[i][j] == EMPTY {
+				runes[i][j] = OBSTRUCTION
+				variations = append(variations, RunesToInputs(runes))
+			}
+		}
+	}
+	log.Printf("Running with %d variations", len(variations))
+	for i, variation := range variations {
+		grid := ParseGrid(variation)
+		state := grid.String()
+		grid.stateCounts[state]++
+		for grid.nguards > 0 {
+			grid.Step()
+			state = grid.String()
+			grid.stateCounts[state]++
+			if grid.stateCounts[state] > 1 {
+				count++
+				break
+			}
+		}
+		log.Printf("Count is %d at variation %d", count, i)
+	}
+	return count
 }

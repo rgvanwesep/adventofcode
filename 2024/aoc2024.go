@@ -76,6 +76,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day5.SumCorrectedMiddlePages(inputLines)))
 	case [2]int{6, 1}:
 		writer.WriteString(fmt.Sprintln(day6.CountVisited(inputLines)))
+	case [2]int{6, 2}:
+		writer.WriteString(fmt.Sprintln(day6.CountCyclingObstructions(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
