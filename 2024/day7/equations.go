@@ -9,7 +9,7 @@ import (
 
 const (
 	MaxUint = ^uint(0)
-	MaxInt = int(MaxUint >> 1)
+	MaxInt  = int(MaxUint >> 1)
 )
 
 type Equation struct {
@@ -25,8 +25,8 @@ func NewEquation(result int, terms []int) Equation {
 }
 
 func (e Equation) EvalCheckWith(ops []BinaryOp) bool {
-	if len(ops) != len(e.terms) - 1 {
-		log.Panicf("Mismatch between ops and terms lengths: %d != %d", len(ops), len(e.terms) - 1)
+	if len(ops) != len(e.terms)-1 {
+		log.Panicf("Mismatch between ops and terms lengths: %d != %d", len(ops), len(e.terms)-1)
 	}
 	result := ops[0].Eval(e.terms[0], e.terms[1])
 	for i := 1; i < len(e.terms)-1; i++ {
