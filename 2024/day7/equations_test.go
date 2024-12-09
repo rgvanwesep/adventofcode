@@ -1,6 +1,11 @@
 package day7
 
-import "testing"
+import (
+	"io"
+	"os"
+	"strings"
+	"testing"
+)
 
 func TestSumCorrected(t *testing.T) {
 	cases := []struct {
@@ -56,6 +61,12 @@ func TestSumCorrected(t *testing.T) {
 				"5: 1 3 2",
 			},
 			5,
+		},
+		{
+			[]string{
+				"13723: 146 1 91 294 52",
+			},
+			13723,
 		},
 		{
 			[]string{
@@ -129,9 +140,9 @@ func TestSumCorrectedSimple(t *testing.T) {
 		},
 		{
 			[]string{
-				"5: 1 3 2",
+				"13723: 146 1 91 294 52",
 			},
-			5,
+			13723,
 		},
 		{
 			[]string{
@@ -145,11 +156,45 @@ func TestSumCorrectedSimple(t *testing.T) {
 			},
 			0,
 		},
+		{
+			[]string{
+				"5: 1 3 2",
+			},
+			5,
+		},
 	}
 	for _, c := range cases {
 		result := SumCorrectedSimple(c.inputs)
 		if result != c.expected {
 			t.Errorf("SumCorrectedSimple(%v) == %d, expected %d", c.inputs, result, c.expected)
+		}
+	}
+}
+
+func TestComparisonSumCorrected(t *testing.T) {
+	inputFile, err := os.Open("../data/day7/equations.txt")
+	if err != nil {
+		t.Fatalf("Could not open input file")
+	}
+	inputBytes := make([]byte, 0)
+	buffer := make([]byte, 1<<20)
+	for {
+		n, err := inputFile.Read(buffer)
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				t.Fatalf("Could not read input file: %v", err)
+			}
+		}
+		inputBytes = append(inputBytes, buffer[:n]...)
+	}
+	inputs := strings.Split(string(inputBytes), "\n")
+	for _, input := range inputs {
+		sum := SumCorrected([]string{input})
+		sumSimple := SumCorrectedSimple([]string{input})
+		if sum != sumSimple {
+			t.Errorf("SumCorrected({%q}) == %d, expected %d", input, sum, sumSimple)
 		}
 	}
 }
@@ -216,6 +261,27 @@ func TestGenerateOps(t *testing.T) {
 				{MultiplyOp{}, AddOp{}, MultiplyOp{}},
 				{MultiplyOp{}, MultiplyOp{}, AddOp{}},
 				{MultiplyOp{}, MultiplyOp{}, MultiplyOp{}},
+			},
+		},
+		{
+			4,
+			[][]BinaryOp{
+				{AddOp{}, AddOp{}, AddOp{}, AddOp{}},
+				{AddOp{}, AddOp{}, AddOp{}, MultiplyOp{}},
+				{AddOp{}, AddOp{}, MultiplyOp{}, AddOp{}},
+				{AddOp{}, AddOp{}, MultiplyOp{}, MultiplyOp{}},
+				{AddOp{}, MultiplyOp{}, AddOp{}, AddOp{}},
+				{AddOp{}, MultiplyOp{}, AddOp{}, MultiplyOp{}},
+				{AddOp{}, MultiplyOp{}, MultiplyOp{}, AddOp{}},
+				{AddOp{}, MultiplyOp{}, MultiplyOp{}, MultiplyOp{}},
+				{MultiplyOp{}, AddOp{}, AddOp{}, AddOp{}},
+				{MultiplyOp{}, AddOp{}, AddOp{}, MultiplyOp{}},
+				{MultiplyOp{}, AddOp{}, MultiplyOp{}, AddOp{}},
+				{MultiplyOp{}, AddOp{}, MultiplyOp{}, MultiplyOp{}},
+				{MultiplyOp{}, MultiplyOp{}, AddOp{}, AddOp{}},
+				{MultiplyOp{}, MultiplyOp{}, AddOp{}, MultiplyOp{}},
+				{MultiplyOp{}, MultiplyOp{}, MultiplyOp{}, AddOp{}},
+				{MultiplyOp{}, MultiplyOp{}, MultiplyOp{}, MultiplyOp{}},
 			},
 		},
 	}

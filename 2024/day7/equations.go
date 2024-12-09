@@ -3,6 +3,7 @@ package day7
 import (
 	"log"
 	"math/big"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -62,7 +63,7 @@ func GenerateOps(n int) [][]BinaryOp {
 	ops := make([][]BinaryOp, 0)
 	prevOps := GenerateOps(n - 1)
 	for _, o := range prevOps {
-		add := append(o, AddOp{})
+		add := append(slices.Clone(o), AddOp{})
 		multiply := append(o, MultiplyOp{})
 		ops = append(ops, add, multiply)
 	}
