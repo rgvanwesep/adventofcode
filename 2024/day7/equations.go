@@ -2,8 +2,14 @@ package day7
 
 import (
 	"log"
+	"math/big"
 	"strconv"
 	"strings"
+)
+
+const (
+	MaxUint = ^uint(0)
+	MaxInt = int(MaxUint >> 1)
 )
 
 type Equation struct {
@@ -78,8 +84,10 @@ func ParseEquations(inputs []string) []Equation {
 
 func SumCorrected(inputs []string) int {
 	sum := 0
+	maxSum := big.NewInt(0)
 	equations := ParseEquations(inputs)
 	for _, equation := range equations {
+		maxSum.Add(maxSum, big.NewInt(int64(equation.result)))
 		opsCombos := GenerateOps(len(equation.terms) - 1)
 		for _, ops := range opsCombos {
 			if ok := equation.EvalCheckWith(ops); ok {
@@ -87,6 +95,11 @@ func SumCorrected(inputs []string) int {
 				break
 			}
 		}
+	}
+	if maxSum.Cmp(big.NewInt(int64(MaxInt))) <= 0 {
+		log.Print("Int is large enough")
+	} else {
+		log.Print("Int may not be large enough")
 	}
 	return sum
 }
