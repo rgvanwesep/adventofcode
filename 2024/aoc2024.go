@@ -7,6 +7,7 @@ import (
 	"aoc2024/day4"
 	"aoc2024/day5"
 	"aoc2024/day6"
+	"aoc2024/day7"
 	"bufio"
 	"flag"
 	"fmt"
@@ -78,6 +79,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day6.CountVisited(inputLines)))
 	case [2]int{6, 2}:
 		writer.WriteString(fmt.Sprintln(day6.CountCyclingObstructions(inputLines)))
+	case [2]int{7, 1}:
+		writer.WriteString(fmt.Sprintln(day7.SumCorrected(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
