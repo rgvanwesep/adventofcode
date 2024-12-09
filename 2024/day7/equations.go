@@ -118,6 +118,28 @@ func SumCorrected(inputs []string) int {
 	return sum
 }
 
+func GetPossibleResults(termStr string) []int {
+	split := strings.Split(termStr, " ")
+	terms := make([]int, 0)
+	for _, s := range split {
+		term, err := strconv.Atoi(s)
+		if err != nil {
+			log.Panicf("Could not parse term %q from input %q", s, termStr)
+		}
+		terms = append(terms, term)
+	}
+
+	possibleResults := []int{terms[0] + terms[1], terms[0] * terms[1]}
+	for i := 2; i < len(terms); i++ {
+		newPossibleResults := make([]int, 0)
+		for _, r := range possibleResults {
+			newPossibleResults = append(newPossibleResults, r+terms[i], r*terms[i])
+		}
+		possibleResults = newPossibleResults
+	}
+	return possibleResults
+}
+
 func SumCorrectedSimple(inputs []string) int {
 	sum := 0
 	for _, input := range inputs {
@@ -131,25 +153,7 @@ func SumCorrectedSimple(inputs []string) int {
 			log.Panicf("Could not parse result from input %q", input)
 		}
 
-		split = strings.Split(termStr, " ")
-		terms := make([]int, 0)
-		for _, s := range split {
-			term, err := strconv.Atoi(s)
-			if err != nil {
-				log.Panicf("Could not parse term %q from input %q", s, input)
-			}
-			terms = append(terms, term)
-		}
-
-		possibleResults := []int{terms[0] + terms[1], terms[0] * terms[1]}
-		for i := 2; i < len(terms); i++ {
-			newPossibleResults := make([]int, 0)
-			for _, r := range possibleResults {
-				newPossibleResults = append(newPossibleResults, r+terms[i], r*terms[i])
-			}
-			possibleResults = newPossibleResults
-		}
-
+		possibleResults := GetPossibleResults(termStr)
 		for _, r := range possibleResults {
 			if r == result {
 				sum += r
