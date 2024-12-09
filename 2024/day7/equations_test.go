@@ -78,6 +78,82 @@ func TestSumCorrected(t *testing.T) {
 	}
 }
 
+func TestSumCorrectedSimple(t *testing.T) {
+	cases := []struct {
+		inputs   []string
+		expected int
+	}{
+		{
+			[]string{
+				"190: 10 19",
+				"3267: 81 40 27",
+				"83: 17 5",
+				"156: 15 6",
+				"7290: 6 8 6 15",
+				"161011: 16 10 13",
+				"192: 17 8 14",
+				"21037: 9 7 18 13",
+				"292: 11 6 16 20",
+			},
+			3749,
+		},
+		{
+			[]string{
+				"6: 1 2 3",
+			},
+			6,
+		},
+		{
+			[]string{
+				"6: 1 3 2",
+			},
+			6,
+		},
+		{
+			[]string{
+				"9: 1 2 3",
+			},
+			9,
+		},
+		{
+			[]string{
+				"9: 1 3 2",
+			},
+			0,
+		},
+		{
+			[]string{
+				"5: 1 2 3",
+			},
+			5,
+		},
+		{
+			[]string{
+				"5: 1 3 2",
+			},
+			5,
+		},
+		{
+			[]string{
+				"1: 1 2 3",
+				"2: 1 2 3",
+				"3: 1 2 3",
+				"4: 1 2 3",
+				"7: 1 2 3",
+				"8: 1 2 3",
+				"10: 1 2 3",
+			},
+			0,
+		},
+	}
+	for _, c := range cases {
+		result := SumCorrectedSimple(c.inputs)
+		if result != c.expected {
+			t.Errorf("SumCorrectedSimple(%v) == %d, expected %d", c.inputs, result, c.expected)
+		}
+	}
+}
+
 func TestEvalCheckWith(t *testing.T) {
 	cases := []struct {
 		e        Equation
