@@ -73,6 +73,9 @@ func ParseEquations(inputs []string) []Equation {
 	equations := make([]Equation, 0)
 	for _, input := range inputs {
 		split := strings.Split(input, ": ")
+		if len(split) != 2 {
+			log.Panicf("Could not split input %q", input)
+		}
 		resultStr, termStr := split[0], split[1]
 		result, err := strconv.Atoi(resultStr)
 		if err != nil {
