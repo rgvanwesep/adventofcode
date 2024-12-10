@@ -1,5 +1,13 @@
 package day8
 
+func GCD(a, b int) int {
+	for b != 0 {
+		a, b = b, a%b
+	}
+
+	return a
+}
+
 type Vector struct {
 	x, y int
 }
@@ -14,6 +22,11 @@ func (v1 Vector) Add(v2 Vector) Vector {
 
 func (v Vector) Negate() Vector {
 	return Vector{-v.x, -v.y}
+}
+
+func (v Vector) Reduce() Vector {
+	gcd := GCD(v.x, v.y)
+	return Vector{v.x / gcd, v.y / gcd}
 }
 
 type Square struct {
@@ -79,6 +92,46 @@ func CountAntiNodes(inputs []string) int {
 				if i != j {
 					diff := v1.Subtract(v2)
 					antiNodes := []Vector{v1.Add(diff), v2.Add(diff.Negate())}
+					for _, antiNode := range antiNodes {
+						if grid.InBounds(antiNode) {
+							value := grid.GetValue(antiNode)
+							if !value.antiNode {
+								grid.SetValue(antiNode, Square{
+									empty:    value.empty,
+									antenna:  value.antenna,
+									antiNode: true,
+								})
+								count++
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return count
+}
+
+func CountAntiNodesHarmonics(inputs []string) int {
+	count := 0
+	grid, antennas := ParseGrid(inputs)
+	for _, vecs := range antennas {
+		for i, v1 := range vecs {
+			for j, v2 := range vecs[:i] {
+				if i != j {
+					diff := v1.Subtract(v2)
+					diffReduced := diff.Reduce()
+					antiNodes := []Vector{v1, v2}
+					for {
+						a1 := v1.Add(diff)
+						a2 := v2.Add(diff.Negate())
+						if grid.InBounds(a1) || grid.InBounds(a2) {
+							antiNodes = append(antiNodes, a1, a2)
+							diff = diff.Add(diffReduced)
+						} else {
+							break
+						}
+					}
 					for _, antiNode := range antiNodes {
 						if grid.InBounds(antiNode) {
 							value := grid.GetValue(antiNode)
