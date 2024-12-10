@@ -107,6 +107,18 @@ func TestSumCorrectedWithConcat(t *testing.T) {
 			},
 			11387,
 		},
+		{
+			[]string{
+				"13723: 146 1 91 294 52",
+			},
+			13723,
+		},
+		{
+			[]string{
+				"14619129452: 146 1 91 294 52",
+			},
+			14619129452,
+		},
 	}
 	for _, c := range cases {
 		result := SumCorrectedWithConcat(c.inputs)

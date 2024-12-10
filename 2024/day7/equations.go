@@ -56,10 +56,19 @@ func (MultiplyOp) Eval(x, y int) int {
 
 var _ BinaryOp = MultiplyOp{}
 
+func CalcDigits(x int) int {
+	n := 0
+	for x > 0 {
+		n++
+		x /= 10
+	}
+	return n
+}
+
 type ConcatOp struct{}
 
 func (ConcatOp) Eval(x, y int) int {
-	nDigitsY := y/10 + 1
+	nDigitsY := CalcDigits(y)
 	factor := 1
 	for i := 0; i < nDigitsY; i++ {
 		factor *= 10
