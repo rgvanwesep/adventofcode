@@ -56,6 +56,19 @@ func (MultiplyOp) Eval(x, y int) int {
 
 var _ BinaryOp = MultiplyOp{}
 
+type ConcatOp struct{}
+
+func (ConcatOp) Eval(x, y int) int {
+	nDigitsY := y/10 + 1
+	factor := 1
+	for i := 0; i < nDigitsY; i++ {
+		factor *= 10
+	}
+	return x*factor + y
+}
+
+var _ BinaryOp = ConcatOp{}
+
 func GenerateOps(n int) [][]BinaryOp {
 	if n == 1 {
 		return [][]BinaryOp{{AddOp{}}, {MultiplyOp{}}}
@@ -66,6 +79,21 @@ func GenerateOps(n int) [][]BinaryOp {
 		add := append(slices.Clone(o), AddOp{})
 		multiply := append(o, MultiplyOp{})
 		ops = append(ops, add, multiply)
+	}
+	return ops
+}
+
+func GenerateOpsWithConcat(n int) [][]BinaryOp {
+	if n == 1 {
+		return [][]BinaryOp{{AddOp{}}, {MultiplyOp{}}, {ConcatOp{}}}
+	}
+	ops := make([][]BinaryOp, 0)
+	prevOps := GenerateOpsWithConcat(n - 1)
+	for _, o := range prevOps {
+		add := append(slices.Clone(o), AddOp{})
+		multiply := append(slices.Clone(o), MultiplyOp{})
+		concat := append(slices.Clone(o), ConcatOp{})
+		ops = append(ops, add, multiply, concat)
 	}
 	return ops
 }
@@ -103,6 +131,28 @@ func SumCorrected(inputs []string) int {
 	for _, equation := range equations {
 		maxSum.Add(maxSum, big.NewInt(int64(equation.result)))
 		opsCombos := GenerateOps(len(equation.terms) - 1)
+		for _, ops := range opsCombos {
+			if ok := equation.EvalCheckWith(ops); ok {
+				sum += equation.result
+				break
+			}
+		}
+	}
+	if maxSum.Cmp(big.NewInt(int64(MaxInt))) <= 0 {
+		log.Print("Int is large enough")
+	} else {
+		log.Print("Int may not be large enough")
+	}
+	return sum
+}
+
+func SumCorrectedWithConcat(inputs []string) int {
+	sum := 0
+	maxSum := big.NewInt(0)
+	equations := ParseEquations(inputs)
+	for _, equation := range equations {
+		maxSum.Add(maxSum, big.NewInt(int64(equation.result)))
+		opsCombos := GenerateOpsWithConcat(len(equation.terms) - 1)
 		for _, ops := range opsCombos {
 			if ok := equation.EvalCheckWith(ops); ok {
 				sum += equation.result

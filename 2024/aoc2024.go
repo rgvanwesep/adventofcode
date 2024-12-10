@@ -81,6 +81,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day6.CountCyclingObstructions(inputLines)))
 	case [2]int{7, 1}:
 		writer.WriteString(fmt.Sprintln(day7.SumCorrected(inputLines)))
+	case [2]int{7, 2}:
+		writer.WriteString(fmt.Sprintln(day7.SumCorrectedWithConcat(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
