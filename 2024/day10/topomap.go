@@ -125,8 +125,7 @@ func ParseGrid(inputs []string) (*Grid[byte], []Point) {
 	return grid, trailHeads
 }
 
-func SumTrailScores(inputs []string) int {
-	grid, trailHeads := ParseGrid(inputs)
+func RunHikers(grid *Grid[byte], trailHeads []Point) *Stack[Hiker] {
 	hikers := NewStack[Hiker]()
 	for _, p := range trailHeads {
 		hikers.Push(Hiker{
@@ -149,6 +148,12 @@ func SumTrailScores(inputs []string) int {
 			break
 		}
 	}
+	return halted
+}
+
+func SumTrailScores(inputs []string) int {
+	grid, trailHeads := ParseGrid(inputs)
+	halted := RunHikers(grid, trailHeads)
 	pairs := map[[2]Point]bool{}
 	for {
 		if hiker, ok := halted.Pop(); ok {
