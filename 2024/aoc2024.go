@@ -2,6 +2,7 @@ package main
 
 import (
 	"aoc2024/day1"
+	"aoc2024/day10"
 	"aoc2024/day2"
 	"aoc2024/day3"
 	"aoc2024/day4"
@@ -93,6 +94,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day9.CalcChecksum(inputLines)))
 	case [2]int{9, 2}:
 		writer.WriteString(fmt.Sprintln(day9.CalcChecksumFileSwap(inputLines)))
+	case [2]int{10, 1}:
+		writer.WriteString(fmt.Sprintln(day10.SumTrailScores(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
