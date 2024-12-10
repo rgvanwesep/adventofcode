@@ -9,6 +9,7 @@ import (
 	"aoc2024/day6"
 	"aoc2024/day7"
 	"aoc2024/day8"
+	"aoc2024/day9"
 	"bufio"
 	"flag"
 	"fmt"
@@ -88,6 +89,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day8.CountAntiNodes(inputLines)))
 	case [2]int{8, 2}:
 		writer.WriteString(fmt.Sprintln(day8.CountAntiNodesHarmonics(inputLines)))
+	case [2]int{9, 1}:
+		writer.WriteString(fmt.Sprintln(day9.CalcChecksum(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
