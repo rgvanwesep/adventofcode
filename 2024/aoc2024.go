@@ -91,6 +91,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day8.CountAntiNodesHarmonics(inputLines)))
 	case [2]int{9, 1}:
 		writer.WriteString(fmt.Sprintln(day9.CalcChecksum(inputLines)))
+	case [2]int{9, 2}:
+		writer.WriteString(fmt.Sprintln(day9.CalcChecksumFileSwap(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
