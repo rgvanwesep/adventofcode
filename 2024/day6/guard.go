@@ -3,7 +3,6 @@ package day6
 import (
 	"fmt"
 	"log"
-	"maps"
 )
 
 const (
@@ -59,6 +58,11 @@ type Coordinates struct {
 	x, y int
 }
 
+func (c Coordinates) RowMajorIndex(nrows, ncols int) int {
+	row := nrows - c.y - 1
+	return row*ncols + c.x
+}
+
 type Square struct {
 	guard    Optional[Guard]
 	occupant rune
@@ -68,18 +72,26 @@ type Square struct {
 type Grid struct {
 	nrows, ncols      int
 	nguards, nvisited int
-	squares           map[Coordinates]Square
+	squares           []Square
 	guardCoords       []Coordinates
 	stateCounts       map[string]int
 }
 
 func NewGrid(nrows, ncols int) Grid {
-	squares := make(map[Coordinates]Square)
+	squares := make([]Square, nrows*ncols)
 	return Grid{nrows, ncols, 0, 0, squares, []Coordinates{}, map[string]int{}}
 }
 
+func (g *Grid) GetValue(c Coordinates) Square {
+	return g.squares[c.RowMajorIndex(g.nrows, g.ncols)]
+}
+
+func (g *Grid) SetValue(c Coordinates, s Square) {
+	g.squares[c.RowMajorIndex(g.nrows, g.ncols)] = s
+}
+
 func (g *Grid) AddSquare(c Coordinates, s Square) {
-	g.squares[c] = s
+	g.SetValue(c, s)
 	if !s.guard.IsNone() {
 		g.nguards++
 		g.nvisited++
@@ -96,7 +108,7 @@ func (g *Grid) Step() {
 	updates := make(map[Coordinates]Square)
 	newGuardCoords := make([]Coordinates, 0)
 	for _, c := range g.guardCoords {
-		s := g.squares[c]
+		s := g.GetValue(c)
 		switch s.guard.GetValue().direction {
 		case UP:
 			cNext = Coordinates{c.x, c.y + 1}
@@ -111,7 +123,7 @@ func (g *Grid) Step() {
 			updates[c] = Square{None[Guard](), s.occupant, s.visted}
 			g.nguards--
 		} else {
-			sNext = g.squares[cNext]
+			sNext = g.GetValue(cNext)
 			if sNext.occupant == OBSTRUCTION {
 				gNext = s.guard.GetValue().Turned()
 				updates[c] = Square{Some(gNext), s.occupant, s.visted}
@@ -121,13 +133,15 @@ func (g *Grid) Step() {
 				updates[c] = Square{None[Guard](), s.occupant, s.visted}
 				updates[cNext] = Square{Some(gNext), sNext.occupant, true}
 				newGuardCoords = append(newGuardCoords, cNext)
-				if !g.squares[cNext].visted {
+				if !g.GetValue(cNext).visted {
 					g.nvisited++
 				}
 			}
 		}
 	}
-	maps.Insert(g.squares, maps.All(updates))
+	for c, s := range updates {
+		g.SetValue(c, s)
+	}
 	g.guardCoords = newGuardCoords
 }
 
@@ -136,7 +150,7 @@ func (g Grid) String() string {
 	for i := range g.nrows {
 		for j := range g.ncols {
 			c := Coordinates{j, g.nrows - i - 1}
-			s := g.squares[c]
+			s := g.GetValue(c)
 			if s.guard.IsNone() {
 				runes = append(runes, s.occupant)
 			} else {
