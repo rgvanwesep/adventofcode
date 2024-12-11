@@ -36,20 +36,21 @@ func (o Optional[T]) GetValue() T {
 }
 
 type Guard struct {
-	direction rune
+	direction      rune
+	directionIndex int
 }
 
 func (g Guard) Turned() Guard {
 	var gTurned Guard
 	switch g.direction {
 	case UP:
-		gTurned = Guard{RIGHT}
+		gTurned = Guard{RIGHT, 3}
 	case DOWN:
-		gTurned = Guard{LEFT}
+		gTurned = Guard{LEFT, 2}
 	case LEFT:
-		gTurned = Guard{UP}
+		gTurned = Guard{UP, 0}
 	case RIGHT:
-		gTurned = Guard{DOWN}
+		gTurned = Guard{DOWN, 1}
 	}
 	return gTurned
 }
@@ -73,13 +74,14 @@ type Grid struct {
 	nrows, ncols      int
 	nguards, nvisited int
 	squares           []Square
-	guardCoords       []Coordinates
-	stateCounts       map[string]int
+	guardCoords       Coordinates
+	stateCounts       []int
 }
 
 func NewGrid(nrows, ncols int) Grid {
 	squares := make([]Square, nrows*ncols)
-	return Grid{nrows, ncols, 0, 0, squares, []Coordinates{}, map[string]int{}}
+	guardCoords := make([]int, nrows*ncols*4)
+	return Grid{nrows, ncols, 0, 0, squares, Coordinates{-1, -1}, guardCoords}
 }
 
 func (g *Grid) GetValue(c Coordinates) Square {
@@ -90,12 +92,34 @@ func (g *Grid) SetValue(c Coordinates, s Square) {
 	g.squares[c.RowMajorIndex(g.nrows, g.ncols)] = s
 }
 
+func (g *Grid) GetStateCount() int {
+	guard := g.GetValue(g.guardCoords).guard
+	if guard.IsNone() {
+		return -1
+	}
+	row := g.nrows - g.guardCoords.y - 1
+	col := g.guardCoords.x
+	directionIndex := guard.GetValue().directionIndex
+	return g.stateCounts[row*g.ncols*4+col*4+directionIndex]
+}
+
+func (g *Grid) IncrementStateCount() {
+	guard := g.GetValue(g.guardCoords).guard
+	if guard.IsNone() {
+		return
+	}
+	row := g.nrows - g.guardCoords.y - 1
+	col := g.guardCoords.x
+	directionIndex := guard.GetValue().directionIndex
+	g.stateCounts[row*g.ncols*4+col*4+directionIndex]++
+}
+
 func (g *Grid) AddSquare(c Coordinates, s Square) {
 	g.SetValue(c, s)
 	if !s.guard.IsNone() {
 		g.nguards++
 		g.nvisited++
-		g.guardCoords = append(g.guardCoords, c)
+		g.guardCoords = c
 	}
 }
 
@@ -106,39 +130,40 @@ func (g *Grid) Step() {
 		gNext Guard
 	)
 	updates := make(map[Coordinates]Square)
-	newGuardCoords := make([]Coordinates, 0)
-	for _, c := range g.guardCoords {
-		s := g.GetValue(c)
-		switch s.guard.GetValue().direction {
-		case UP:
-			cNext = Coordinates{c.x, c.y + 1}
-		case DOWN:
-			cNext = Coordinates{c.x, c.y - 1}
-		case LEFT:
-			cNext = Coordinates{c.x - 1, c.y}
-		case RIGHT:
-			cNext = Coordinates{c.x + 1, c.y}
-		}
-		if cNext.x < 0 || cNext.x >= g.ncols || cNext.y < 0 || cNext.y >= g.nrows {
-			updates[c] = Square{None[Guard](), s.occupant, s.visted}
-			g.nguards--
+	newGuardCoords := Coordinates{-1, -1}
+	c := g.guardCoords
+
+	s := g.GetValue(c)
+	switch s.guard.GetValue().direction {
+	case UP:
+		cNext = Coordinates{c.x, c.y + 1}
+	case DOWN:
+		cNext = Coordinates{c.x, c.y - 1}
+	case LEFT:
+		cNext = Coordinates{c.x - 1, c.y}
+	case RIGHT:
+		cNext = Coordinates{c.x + 1, c.y}
+	}
+	if cNext.x < 0 || cNext.x >= g.ncols || cNext.y < 0 || cNext.y >= g.nrows {
+		updates[c] = Square{None[Guard](), s.occupant, s.visted}
+		g.nguards--
+	} else {
+		sNext = g.GetValue(cNext)
+		if sNext.occupant == OBSTRUCTION {
+			gNext = s.guard.GetValue().Turned()
+			updates[c] = Square{Some(gNext), s.occupant, s.visted}
+			newGuardCoords = c
 		} else {
-			sNext = g.GetValue(cNext)
-			if sNext.occupant == OBSTRUCTION {
-				gNext = s.guard.GetValue().Turned()
-				updates[c] = Square{Some(gNext), s.occupant, s.visted}
-				newGuardCoords = append(newGuardCoords, c)
-			} else {
-				gNext = s.guard.GetValue()
-				updates[c] = Square{None[Guard](), s.occupant, s.visted}
-				updates[cNext] = Square{Some(gNext), sNext.occupant, true}
-				newGuardCoords = append(newGuardCoords, cNext)
-				if !g.GetValue(cNext).visted {
-					g.nvisited++
-				}
+			gNext = s.guard.GetValue()
+			updates[c] = Square{None[Guard](), s.occupant, s.visted}
+			updates[cNext] = Square{Some(gNext), sNext.occupant, true}
+			newGuardCoords = cNext
+			if !g.GetValue(cNext).visted {
+				g.nvisited++
 			}
 		}
 	}
+
 	for c, s := range updates {
 		g.SetValue(c, s)
 	}
@@ -170,8 +195,14 @@ func ParseGrid(inputs []string) Grid {
 			c := Coordinates{j, nrows - i - 1}
 			var s Square
 			switch char {
-			case UP, DOWN, LEFT, RIGHT:
-				s = Square{Some(Guard{char}), EMPTY, true}
+			case UP:
+				s = Square{Some(Guard{char, 0}), EMPTY, true}
+			case DOWN:
+				s = Square{Some(Guard{char, 1}), EMPTY, true}
+			case LEFT:
+				s = Square{Some(Guard{char, 2}), EMPTY, true}
+			case RIGHT:
+				s = Square{Some(Guard{char, 3}), EMPTY, true}
 			case EMPTY:
 				s = Square{None[Guard](), EMPTY, false}
 			case OBSTRUCTION:
@@ -227,13 +258,11 @@ func CountCyclingObstructions(inputs []string) int {
 	log.Printf("Running with %d variations", len(variations))
 	for i, variation := range variations {
 		grid := ParseGrid(variation)
-		state := grid.String()
-		grid.stateCounts[state]++
+		grid.IncrementStateCount()
 		for grid.nguards > 0 {
 			grid.Step()
-			state = grid.String()
-			grid.stateCounts[state]++
-			if grid.stateCounts[state] > 1 {
+			grid.IncrementStateCount()
+			if grid.GetStateCount() > 1 {
 				count++
 				break
 			}
