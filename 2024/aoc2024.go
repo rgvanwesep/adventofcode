@@ -109,6 +109,8 @@ func main() {
 
 	writer.Flush()
 
+	log.Print("Done")
+
 	if *memprofile != "" {
 		f, err := os.Create(*memprofile)
 		if err != nil {

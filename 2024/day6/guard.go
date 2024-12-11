@@ -256,7 +256,7 @@ func CountCyclingObstructions(inputs []string) int {
 		}
 	}
 	log.Printf("Running with %d variations", len(variations))
-	for i, variation := range variations {
+	for _, variation := range variations {
 		grid := ParseGrid(variation)
 		grid.IncrementStateCount()
 		for grid.nguards > 0 {
@@ -267,7 +267,6 @@ func CountCyclingObstructions(inputs []string) int {
 				break
 			}
 		}
-		log.Printf("Count is %d at variation %d", count, i)
 	}
 	return count
 }
