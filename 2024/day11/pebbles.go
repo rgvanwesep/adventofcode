@@ -56,14 +56,13 @@ func (c *Counter) CountAncestors(pebble int, nBlinks int) int {
 	}
 	count := 0
 	for _, p := range newPebbles {
-		count += c.CountAncestors(p, nBlinks - 1)
+		count += c.CountAncestors(p, nBlinks-1)
 	}
 	c.memo[[2]int{pebble, nBlinks}] = count
 	return count
 }
 
-func CountPebbles(inputs []string) int {
-	const nBlinks = 25
+func CountPebbles(inputs []string, nBlinks int) int {
 	input := inputs[0]
 	split := strings.Split(input, " ")
 	counter := NewCounter()

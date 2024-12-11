@@ -100,7 +100,9 @@ func main() {
 	case [2]int{10, 2}:
 		writer.WriteString(fmt.Sprintln(day10.SumTrailRatings(inputLines)))
 	case [2]int{11, 1}:
-		writer.WriteString(fmt.Sprintln(day11.CountPebbles(inputLines)))
+		writer.WriteString(fmt.Sprintln(day11.CountPebbles(inputLines, 25)))
+	case [2]int{11, 2}:
+		writer.WriteString(fmt.Sprintln(day11.CountPebbles(inputLines, 75)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
