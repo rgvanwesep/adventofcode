@@ -166,3 +166,19 @@ func SumTrailScores(inputs []string) int {
 	}
 	return len(pairs)
 }
+
+func SumTrailRatings(inputs []string) int {
+	grid, trailHeads := ParseGrid(inputs)
+	halted := RunHikers(grid, trailHeads)
+	count := 0
+	for {
+		if hiker, ok := halted.Pop(); ok {
+			if hiker.reachedTop {
+				count++
+			}
+		} else {
+			break
+		}
+	}
+	return count
+}

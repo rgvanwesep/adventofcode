@@ -96,6 +96,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day9.CalcChecksumFileSwap(inputLines)))
 	case [2]int{10, 1}:
 		writer.WriteString(fmt.Sprintln(day10.SumTrailScores(inputLines)))
+	case [2]int{10, 2}:
+		writer.WriteString(fmt.Sprintln(day10.SumTrailRatings(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
