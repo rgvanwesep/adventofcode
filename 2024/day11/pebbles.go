@@ -27,8 +27,20 @@ func Join(digits []int) int {
 	return x
 }
 
-func CountAncestors(pebble int, nBlinks int) int {
+type Counter struct {
+	memo map[[2]int]int
+}
+
+func NewCounter() *Counter {
+	return &Counter{memo: map[[2]int]int{}}
+}
+
+func (c *Counter) CountAncestors(pebble int, nBlinks int) int {
+	if count, ok := c.memo[[2]int{pebble, nBlinks}]; ok {
+		return count
+	}
 	if nBlinks == 0 {
+		c.memo[[2]int{pebble, 0}] = 1
 		return 1
 	}
 	digits := Split(pebble)
@@ -44,8 +56,9 @@ func CountAncestors(pebble int, nBlinks int) int {
 	}
 	count := 0
 	for _, p := range newPebbles {
-		count += CountAncestors(p, nBlinks - 1)
+		count += c.CountAncestors(p, nBlinks - 1)
 	}
+	c.memo[[2]int{pebble, nBlinks}] = count
 	return count
 }
 
@@ -53,10 +66,11 @@ func CountPebbles(inputs []string) int {
 	const nBlinks = 25
 	input := inputs[0]
 	split := strings.Split(input, " ")
+	counter := NewCounter()
 	count := 0
 	for _, s := range split {
 		if pebble, err := strconv.Atoi(s); err == nil {
-			count += CountAncestors(pebble, nBlinks)
+			count += counter.CountAncestors(pebble, nBlinks)
 		} else {
 			log.Panicf("Could not parse %q", input)
 		}
