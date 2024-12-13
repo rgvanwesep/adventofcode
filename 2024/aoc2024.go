@@ -4,6 +4,7 @@ import (
 	"aoc2024/day1"
 	"aoc2024/day10"
 	"aoc2024/day11"
+	"aoc2024/day12"
 	"aoc2024/day2"
 	"aoc2024/day3"
 	"aoc2024/day4"
@@ -103,6 +104,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day11.CountPebbles(inputLines, 25)))
 	case [2]int{11, 2}:
 		writer.WriteString(fmt.Sprintln(day11.CountPebbles(inputLines, 75)))
+	case [2]int{12, 1}:
+		writer.WriteString(fmt.Sprintln(day12.SumFencePrice(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
