@@ -220,7 +220,7 @@ func PointsToGraph(points []Point) Graph {
 	adjList := make([][]int, len(points))
 	for i1, p1 := range points {
 		adjList[i1] = make([]int, 0, 4)
-		for i2, p2 := range points[:i1] {
+		for i2, p2 := range points {
 			if p1.IsNeighbor(p2) {
 				adjList[i1] = append(adjList[i1], i2)
 			}
@@ -233,41 +233,80 @@ func (g Graph) GetNeighbors(i int) []int {
 	return g.adjList[i]
 }
 
-func IsSquare(p0, p1, p2, p3 Point) bool {
-	return false
+func CalcIntersection(x, y []int) []int {
+	s := map[int]bool{}
+	for _, i := range x {
+		s[i] = true
+	}
+	intersection := []int{}
+	for _, i := range y {
+		if s[i] {
+			intersection = append(intersection, i)
+		}
+	}
+	return intersection
 }
 
 func GetNumSides(points []Point, graph Graph) int {
 	nCorners := 0
 	for i, point := range points {
 		neighbors := graph.GetNeighbors(i)
-		nextNeighbors := []int{}
-		for _, neighbor := range neighbors {
-			for _, nextNeighbor := range graph.GetNeighbors(neighbor) {
-				addNextNeighbor := nextNeighbor != i
-				for _, n := range neighbors {
-					if nextNeighbor == n {
-						addNextNeighbor = false
-						break
-					}
-				}
-				if addNextNeighbor {
-					nextNeighbors = append(nextNeighbors, nextNeighbor)
-				}
-			}
-		}
 		switch len(neighbors) {
 		case 0:
 			nCorners += 4
 		case 1:
 			nCorners += 2
 		case 2:
-			for _, nextNeighbor := range nextNeighbors {
-				if IsSquare(point, points[neighbors[0]], points[neighbors[1]], points[nextNeighbor]) {
+			p0 := points[neighbors[0]]
+			p1 := points[neighbors[1]]
+			alignedX := p0.x == point.x && point.x == p1.x
+			alignedY := p0.y == point.y && point.y == p1.y
+			if !(alignedX || alignedY) {
+				nextNeighbors0 := graph.GetNeighbors(neighbors[0])
+				nextNeighbors1 := graph.GetNeighbors(neighbors[1])
+				if len(CalcIntersection(nextNeighbors0, nextNeighbors1)) > 1 {
 					nCorners += 1
 				} else {
 					nCorners += 2
 				}
+			}
+		case 3:
+			sharedNeighbors := 0
+			nextNeighbors := [3][]int{}
+			for i := range nextNeighbors {
+				nextNeighbors[i] = graph.GetNeighbors(neighbors[i])
+			}
+			for i, ni := range nextNeighbors {
+				for _, nj := range nextNeighbors[:i] {
+					sharedNeighbors += len(CalcIntersection(ni, nj)) - 1
+				}
+			}
+			switch sharedNeighbors {
+			case 0:
+				nCorners += 2
+			case 1:
+				nCorners += 1
+			}
+		case 4:
+			sharedNeighbors := 0
+			nextNeighbors := [4][]int{}
+			for i := range nextNeighbors {
+				nextNeighbors[i] = graph.GetNeighbors(neighbors[i])
+			}
+			for i, ni := range nextNeighbors {
+				for _, nj := range nextNeighbors[:i] {
+					sharedNeighbors += len(CalcIntersection(ni, nj)) - 1
+				}
+			}
+			switch sharedNeighbors {
+			case 0:
+				nCorners += 4
+			case 1:
+				nCorners += 3
+			case 2:
+				nCorners += 2
+			case 3:
+				nCorners += 1
 			}
 		}
 	}
