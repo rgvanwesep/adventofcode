@@ -211,3 +211,22 @@ func SumFencePrice(inputs []string) int {
 	}
 	return sum
 }
+
+func GetNumSides(points []Point) int {
+	return 0
+}
+
+func SumFencePriceDiscount(inputs []string) int {
+	sum := 0
+	grid := ParseGrid(inputs)
+	log.Printf("Grid has %d points", grid.nrows*grid.ncols)
+	nRegions := AssignRegions(grid)
+	log.Printf("Grid has %d regions", nRegions)
+	for i := 1; i <= nRegions; i++ {
+		points := GetRegionPoints(grid, i)
+		area := len(points)
+		nSides := GetNumSides(points)
+		sum += area * nSides
+	}
+	return sum
+}

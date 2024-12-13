@@ -106,6 +106,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day11.CountPebbles(inputLines, 75)))
 	case [2]int{12, 1}:
 		writer.WriteString(fmt.Sprintln(day12.SumFencePrice(inputLines)))
+	case [2]int{12, 2}:
+		writer.WriteString(fmt.Sprintln(day12.SumFencePriceDiscount(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
