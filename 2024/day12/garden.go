@@ -211,3 +211,120 @@ func SumFencePrice(inputs []string) int {
 	}
 	return sum
 }
+
+type Graph struct {
+	adjList [][]int
+}
+
+func PointsToGraph(points []Point) Graph {
+	adjList := make([][]int, len(points))
+	for i1, p1 := range points {
+		adjList[i1] = make([]int, 0, 4)
+		for i2, p2 := range points {
+			if p1.IsNeighbor(p2) {
+				adjList[i1] = append(adjList[i1], i2)
+			}
+		}
+	}
+	return Graph{adjList}
+}
+
+func (g Graph) GetNeighbors(i int) []int {
+	return g.adjList[i]
+}
+
+func CalcIntersection(x, y []int) []int {
+	s := map[int]bool{}
+	for _, i := range x {
+		s[i] = true
+	}
+	intersection := []int{}
+	for _, i := range y {
+		if s[i] {
+			intersection = append(intersection, i)
+		}
+	}
+	return intersection
+}
+
+func GetNumSides(points []Point, graph Graph) int {
+	nCorners := 0
+	for i, point := range points {
+		neighbors := graph.GetNeighbors(i)
+		switch len(neighbors) {
+		case 0:
+			nCorners += 4
+		case 1:
+			nCorners += 2
+		case 2:
+			p0 := points[neighbors[0]]
+			p1 := points[neighbors[1]]
+			alignedX := p0.x == point.x && point.x == p1.x
+			alignedY := p0.y == point.y && point.y == p1.y
+			if !(alignedX || alignedY) {
+				nextNeighbors0 := graph.GetNeighbors(neighbors[0])
+				nextNeighbors1 := graph.GetNeighbors(neighbors[1])
+				if len(CalcIntersection(nextNeighbors0, nextNeighbors1)) > 1 {
+					nCorners += 1
+				} else {
+					nCorners += 2
+				}
+			}
+		case 3:
+			sharedNeighbors := 0
+			nextNeighbors := [3][]int{}
+			for i := range nextNeighbors {
+				nextNeighbors[i] = graph.GetNeighbors(neighbors[i])
+			}
+			for i, ni := range nextNeighbors {
+				for _, nj := range nextNeighbors[:i] {
+					sharedNeighbors += len(CalcIntersection(ni, nj)) - 1
+				}
+			}
+			switch sharedNeighbors {
+			case 0:
+				nCorners += 2
+			case 1:
+				nCorners += 1
+			}
+		case 4:
+			sharedNeighbors := 0
+			nextNeighbors := [4][]int{}
+			for i := range nextNeighbors {
+				nextNeighbors[i] = graph.GetNeighbors(neighbors[i])
+			}
+			for i, ni := range nextNeighbors {
+				for _, nj := range nextNeighbors[:i] {
+					sharedNeighbors += len(CalcIntersection(ni, nj)) - 1
+				}
+			}
+			switch sharedNeighbors {
+			case 0:
+				nCorners += 4
+			case 1:
+				nCorners += 3
+			case 2:
+				nCorners += 2
+			case 3:
+				nCorners += 1
+			}
+		}
+	}
+	return nCorners
+}
+
+func SumFencePriceDiscount(inputs []string) int {
+	sum := 0
+	grid := ParseGrid(inputs)
+	log.Printf("Grid has %d points", grid.nrows*grid.ncols)
+	nRegions := AssignRegions(grid)
+	log.Printf("Grid has %d regions", nRegions)
+	for i := 1; i <= nRegions; i++ {
+		points := GetRegionPoints(grid, i)
+		area := len(points)
+		graph := PointsToGraph(points)
+		nSides := GetNumSides(points, graph)
+		sum += area * nSides
+	}
+	return sum
+}
