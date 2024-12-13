@@ -212,8 +212,66 @@ func SumFencePrice(inputs []string) int {
 	return sum
 }
 
-func GetNumSides(points []Point) int {
-	return 0
+type Graph struct {
+	adjList [][]int
+}
+
+func PointsToGraph(points []Point) Graph {
+	adjList := make([][]int, len(points))
+	for i1, p1 := range points {
+		adjList[i1] = make([]int, 0, 4)
+		for i2, p2 := range points[:i1] {
+			if p1.IsNeighbor(p2) {
+				adjList[i1] = append(adjList[i1], i2)
+			}
+		}
+	}
+	return Graph{adjList}
+}
+
+func (g Graph) GetNeighbors(i int) []int {
+	return g.adjList[i]
+}
+
+func IsSquare(p0, p1, p2, p3 Point) bool {
+	return false
+}
+
+func GetNumSides(points []Point, graph Graph) int {
+	nCorners := 0
+	for i, point := range points {
+		neighbors := graph.GetNeighbors(i)
+		nextNeighbors := []int{}
+		for _, neighbor := range neighbors {
+			for _, nextNeighbor := range graph.GetNeighbors(neighbor) {
+				addNextNeighbor := nextNeighbor != i
+				for _, n := range neighbors {
+					if nextNeighbor == n {
+						addNextNeighbor = false
+						break
+					}
+				}
+				if addNextNeighbor {
+					nextNeighbors = append(nextNeighbors, nextNeighbor)
+				}
+			}
+		}
+		switch len(neighbors) {
+		case 0:
+			nCorners += 4
+		case 1:
+			nCorners += 2
+		case 2:
+			for _, nextNeighbor := range nextNeighbors {
+				if IsSquare(point, points[neighbors[0]], points[neighbors[1]], points[nextNeighbor]) {
+					nCorners += 1
+				} else {
+					nCorners += 2
+				}
+			}
+		}
+	}
+	return nCorners
 }
 
 func SumFencePriceDiscount(inputs []string) int {
@@ -225,7 +283,8 @@ func SumFencePriceDiscount(inputs []string) int {
 	for i := 1; i <= nRegions; i++ {
 		points := GetRegionPoints(grid, i)
 		area := len(points)
-		nSides := GetNumSides(points)
+		graph := PointsToGraph(points)
+		nSides := GetNumSides(points, graph)
 		sum += area * nSides
 	}
 	return sum
