@@ -11,6 +11,7 @@ const (
 	bCost         = 1
 	buttonPattern = `^Button (A|B): X\+(\d+), Y\+(\d+)$`
 	prizePattern  = `^Prize: X=(\d+), Y=(\d+)$`
+	big           = 10000000000000
 )
 
 func gcd(a, b int) int {
@@ -79,6 +80,31 @@ func MinCost(inputs []string) int {
 	sum := 0
 	machines := parseMachines(inputs)
 	for _, m := range machines {
+		lcmA := lcm(m.aVec.x, m.aVec.y)
+		xFact, yFact := lcmA/m.aVec.x, lcmA/m.aVec.y
+		xFactPrize, xFactB := xFact*m.prizeVec.x, xFact*m.bVec.x
+		numerB := xFactPrize - yFact*m.prizeVec.y
+		denom := xFactB - yFact*m.bVec.y
+		bRem := numerB % denom
+		if bRem == 0 {
+			b := numerB / denom
+			numerA := xFactPrize - xFactB*b
+			aRem := numerA % lcmA
+			if aRem == 0 {
+				a := numerA / lcmA
+				sum += a*aCost + b*bCost
+			}
+		}
+	}
+	return sum
+}
+
+func MinCostBig(inputs []string) int {
+	sum := 0
+	machines := parseMachines(inputs)
+	for _, m := range machines {
+		m.prizeVec.x += big
+		m.prizeVec.y += big
 		lcmA := lcm(m.aVec.x, m.aVec.y)
 		xFact, yFact := lcmA/m.aVec.x, lcmA/m.aVec.y
 		xFactPrize, xFactB := xFact*m.prizeVec.x, xFact*m.bVec.x

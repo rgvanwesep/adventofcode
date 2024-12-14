@@ -111,6 +111,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day12.SumFencePriceDiscount(inputLines)))
 	case [2]int{13, 1}:
 		writer.WriteString(fmt.Sprintln(day13.MinCost(inputLines)))
+	case [2]int{13, 2}:
+		writer.WriteString(fmt.Sprintln(day13.MinCostBig(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
