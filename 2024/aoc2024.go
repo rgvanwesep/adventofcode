@@ -6,6 +6,7 @@ import (
 	"aoc2024/day11"
 	"aoc2024/day12"
 	"aoc2024/day13"
+	"aoc2024/day14"
 	"aoc2024/day2"
 	"aoc2024/day3"
 	"aoc2024/day4"
@@ -113,6 +114,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day13.MinCost(inputLines)))
 	case [2]int{13, 2}:
 		writer.WriteString(fmt.Sprintln(day13.MinCostBig(inputLines)))
+	case [2]int{14, 1}:
+		writer.WriteString(fmt.Sprintln(day14.CalcSafetyFactor(inputLines, 103, 101, 100)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
