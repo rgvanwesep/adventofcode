@@ -116,6 +116,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day13.MinCostBig(inputLines)))
 	case [2]int{14, 1}:
 		writer.WriteString(fmt.Sprintln(day14.CalcSafetyFactor(inputLines, 103, 101, 100)))
+	case [2]int{14, 2}:
+		writer.WriteString(fmt.Sprintln(day14.FindSignal(inputLines, 103, 101)))
 	default:
 		log.Fatal("Invalid day or part")
 	}

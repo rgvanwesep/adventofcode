@@ -1,6 +1,7 @@
 package day14
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 	"strconv"
@@ -95,4 +96,57 @@ func CalcSafetyFactor(inputs []string, nrows, ncols int, nIter int) int {
 		product *= n
 	}
 	return product
+}
+
+func FindSignal(inputs []string, nrows, ncols int) int {
+	robots := parseRobots(inputs)
+	midCol := ncols / 2
+	midRow := nrows / 2
+	expectedSum := len(robots) * midCol * midRow / (ncols * nrows)
+	threshold := 3 * expectedSum / 4
+	i := 0
+Outer:
+	for {
+		for i := range robots {
+			robots[i].update(nrows, ncols)
+		}
+		sums := [4]int{}
+		for _, r := range robots {
+			switch {
+			case r.position.x < midCol && r.position.y < midRow:
+				sums[0]++
+			case r.position.x > midCol && r.position.y < midRow:
+				sums[1]++
+			case r.position.x < midCol && r.position.y > midRow:
+				sums[2]++
+			case r.position.x > midCol && r.position.y > midRow:
+				sums[3]++
+			}
+		}
+		i++
+		for _, n := range sums {
+			diff := n - expectedSum
+			if diff < -threshold || diff > threshold {
+				break Outer
+			}
+		}
+	}
+	bitmap := make([][]bool, nrows)
+	for i := range bitmap {
+		bitmap[i] = make([]bool, ncols)
+	}
+	for _, r := range robots {
+		bitmap[r.position.y][r.position.x] = true
+	}
+	for _, row := range bitmap {
+		for _, value := range row {
+			if value {
+				fmt.Print("#")
+			} else {
+				fmt.Print(" ")
+			}
+		}
+		fmt.Println()
+	}
+	return i
 }
