@@ -121,6 +121,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day14.FindSignal(inputLines, 103, 101)))
 	case [2]int{15, 1}:
 		writer.WriteString(fmt.Sprintln(day15.SumCoordinates(inputLines)))
+	case [2]int{15, 2}:
+		writer.WriteString(fmt.Sprintln(day15.SumCoordinatesWide(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
