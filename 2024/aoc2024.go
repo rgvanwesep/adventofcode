@@ -8,6 +8,7 @@ import (
 	"aoc2024/day13"
 	"aoc2024/day14"
 	"aoc2024/day15"
+	"aoc2024/day16"
 	"aoc2024/day2"
 	"aoc2024/day3"
 	"aoc2024/day4"
@@ -123,6 +124,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day15.SumCoordinates(inputLines)))
 	case [2]int{15, 2}:
 		writer.WriteString(fmt.Sprintln(day15.SumCoordinatesWide(inputLines)))
+	case [2]int{16, 1}:
+		writer.WriteString(fmt.Sprintln(day16.MinScore(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
