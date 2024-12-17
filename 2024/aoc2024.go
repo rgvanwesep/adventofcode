@@ -126,6 +126,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day15.SumCoordinatesWide(inputLines)))
 	case [2]int{16, 1}:
 		writer.WriteString(fmt.Sprintln(day16.MinScore(inputLines)))
+	case [2]int{16, 2}:
+		writer.WriteString(fmt.Sprintln(day16.CountTiles(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}

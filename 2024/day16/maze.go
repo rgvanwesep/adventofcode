@@ -15,6 +15,34 @@ const (
 	maxInt    = int(maxUint >> 1)
 )
 
+type stack[T any] struct {
+	values []T
+}
+
+func newStack[T any]() stack[T] {
+	return stack[T]{
+		values: []T{},
+	}
+}
+
+func (s *stack[T]) push(v T) {
+	s.values = append(s.values, v)
+}
+
+func (s *stack[T]) pop() (v T, ok bool) {
+	size := len(s.values)
+	if size > 0 {
+		v = s.values[size-1]
+		s.values = s.values[:size-1]
+		ok = true
+	}
+	return
+}
+
+func (s *stack[T]) clear() {
+	s.values = []T{}
+}
+
 type set[T comparable] struct {
 	values map[T]bool
 }
@@ -130,15 +158,14 @@ func (g *graph[T]) allNodes() iter.Seq2[int, T] {
 	}
 }
 
-func dijkstra[T any](g *graph[T], startId int) (dists []int, prevs []int) {
+func dijkstra[T any](g *graph[T], startId int) ([]int, [][]int) {
 	var u int
 	nnodes := len(g.nodes)
-	dists = make([]int, len(g.nodes))
-	prevs = make([]int, len(g.nodes))
+	dists := make([]int, len(g.nodes))
+	prevs := make([][]int, len(g.nodes))
 	unvisited := newSet[int]()
 	for i := range nnodes {
 		dists[i] = maxInt
-		prevs[i] = -1
 		unvisited.add(i)
 	}
 	dists[startId] = 0
@@ -158,7 +185,9 @@ func dijkstra[T any](g *graph[T], startId int) (dists []int, prevs []int) {
 				d := dists[u] + conn.edgeWeight
 				if d < dists[conn.nodeId] {
 					dists[conn.nodeId] = d
-					prevs[conn.nodeId] = u
+					prevs[conn.nodeId] = []int{u}
+				} else if d == dists[conn.nodeId] {
+					prevs[conn.nodeId] = append(prevs[conn.nodeId], u)
 				}
 			}
 		}
@@ -373,11 +402,19 @@ func CountTiles(inputs []string) int {
 			endIdIndex = j
 		}
 	}
-	endId := maze.endIds[endIdIndex]
-	count := 0
-	for endId != maze.startId {
-		endId = prevs[endId]
-		count++
+	ids := newStack[int]()
+	ids.push(maze.endIds[endIdIndex])
+	positions := newSet[vector]()
+	for {
+		if id, ok := ids.pop(); ok {
+			node := maze.graph.nodes[id]
+			positions.add(node.position)
+			for _, prevId := range prevs[id] {
+				ids.push(prevId)
+			}
+		} else {
+			break
+		}
 	}
-	return count
+	return positions.size()
 }
