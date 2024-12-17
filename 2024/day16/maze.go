@@ -130,13 +130,15 @@ func (g *graph[T]) allNodes() iter.Seq2[int, T] {
 	}
 }
 
-func dijkstra[T any](g *graph[T], startId int) []int {
+func dijkstra[T any](g *graph[T], startId int) (dists []int, prevs []int) {
 	var u int
 	nnodes := len(g.nodes)
-	dists := make([]int, len(g.nodes))
+	dists = make([]int, len(g.nodes))
+	prevs = make([]int, len(g.nodes))
 	unvisited := newSet[int]()
 	for i := range nnodes {
 		dists[i] = maxInt
+		prevs[i] = -1
 		unvisited.add(i)
 	}
 	dists[startId] = 0
@@ -156,11 +158,12 @@ func dijkstra[T any](g *graph[T], startId int) []int {
 				d := dists[u] + conn.edgeWeight
 				if d < dists[conn.nodeId] {
 					dists[conn.nodeId] = d
+					prevs[conn.nodeId] = u
 				}
 			}
 		}
 	}
-	return dists
+	return dists, prevs
 }
 
 type state struct {
@@ -350,11 +353,31 @@ func parseMaze(inputs []string) maze {
 
 func MinScore(inputs []string) int {
 	maze := parseMaze(inputs)
-	dists := dijkstra(maze.graph, maze.startId)
+	dists, _ := dijkstra(maze.graph, maze.startId)
 	return min(
 		dists[maze.endIds[0]],
 		dists[maze.endIds[1]],
 		dists[maze.endIds[2]],
 		dists[maze.endIds[3]],
 	)
+}
+
+func CountTiles(inputs []string) int {
+	maze := parseMaze(inputs)
+	dists, prevs := dijkstra(maze.graph, maze.startId)
+	endIdIndex := 0
+	minDist := dists[maze.endIds[endIdIndex]]
+	for j := range maze.endIds[1:] {
+		if dists[maze.endIds[j]] < minDist {
+			minDist = dists[maze.endIds[j]]
+			endIdIndex = j
+		}
+	}
+	endId := maze.endIds[endIdIndex]
+	count := 0
+	for endId != maze.startId {
+		endId = prevs[endId]
+		count++
+	}
+	return count
 }
