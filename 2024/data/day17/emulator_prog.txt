@@ -1,0 +1,11 @@
+valA = 0b000001
+valB, valC = 0
+do {
+    valB = valA % 8       // valB = 0b000001
+    valB ^= 0b001         // valB = 0b000000
+    valC = valA >> valB   // valC = 0b000001
+    valB ^= 0b101         // valB = 0b000101
+    valB ^= valC          // valB = 0b000100
+    valA >>= 3            // valA = 0b000000
+    fmt.Print(valB % 8)
+} while valA != 0
