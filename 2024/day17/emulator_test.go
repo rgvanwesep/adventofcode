@@ -127,6 +127,46 @@ func TestExecProgram(t *testing.T) {
 			},
 			expected: "0,4",
 		},
+		{
+			inputs: []string{
+				"Register A: 9",
+				"Register B: 0",
+				"Register C: 0",
+				"",
+				"Program: 2,4,1,1,7,5,1,5,4,3,0,3,5,5,3,0",
+			},
+			expected: "4,4",
+		},
+		{
+			inputs: []string{
+				"Register A: 10",
+				"Register B: 0",
+				"Register C: 0",
+				"",
+				"Program: 2,4,1,1,7,5,1,5,4,3,0,3,5,5,3,0",
+			},
+			expected: "7,4",
+		},
+		{
+			inputs: []string{
+				"Register A: 11",
+				"Register B: 0",
+				"Register C: 0",
+				"",
+				"Program: 2,4,1,1,7,5,1,5,4,3,0,3,5,5,3,0",
+			},
+			expected: "5,4",
+		},
+		{
+			inputs: []string{
+				"Register A: 12",
+				"Register B: 0",
+				"Register C: 0",
+				"",
+				"Program: 2,4,1,1,7,5,1,5,4,3,0,3,5,5,3,0",
+			},
+			expected: "0,4",
+		},
 	}
 	for _, c := range cases {
 		result := ExecProgram(c.inputs)
