@@ -10,6 +10,7 @@ import (
 	"aoc2024/day15"
 	"aoc2024/day16"
 	"aoc2024/day17"
+	"aoc2024/day18"
 	"aoc2024/day2"
 	"aoc2024/day3"
 	"aoc2024/day4"
@@ -133,6 +134,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day17.ExecProgram(inputLines)))
 	case [2]int{17, 2}:
 		writer.WriteString(fmt.Sprintln(day17.FindRegisterAValue(inputLines)))
+	case [2]int{18, 1}:
+		writer.WriteString(fmt.Sprintln(day18.CountSteps(inputLines, 71, 71, 1024)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
