@@ -136,6 +136,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day17.FindRegisterAValue(inputLines)))
 	case [2]int{18, 1}:
 		writer.WriteString(fmt.Sprintln(day18.CountSteps(inputLines, 71, 71, 1024)))
+	case [2]int{18, 2}:
+		writer.WriteString(fmt.Sprintln(day18.FindFinalInput(inputLines, 71, 71)))
 	default:
 		log.Fatal("Invalid day or part")
 	}

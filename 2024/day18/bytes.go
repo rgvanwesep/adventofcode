@@ -96,6 +96,17 @@ func (g *grid) all() iter.Seq2[vector, byte] {
 	}
 }
 
+func (g grid) String() string {
+	s := []byte{}
+	for i, c := range g.values {
+		s = append(s, c)
+		if i%g.ncols == g.ncols-1 {
+			s = append(s, '\n')
+		}
+	}
+	return string(s)
+}
+
 type connection struct {
 	nodeId     int
 	edgeWeight int
@@ -156,6 +167,9 @@ func dijkstra[T any](g *graph[T], startId int) ([]int, [][]int) {
 		}
 		unvisited.remove(u)
 
+		if dists[u] == maxInt {
+			continue
+		}
 		for _, conn := range g.adjacencies[u] {
 			if unvisited.contains(conn.nodeId) {
 				d := dists[u] + conn.edgeWeight
@@ -232,4 +246,15 @@ func CountSteps(inputs []string, nrows, ncols int, nInputs int) int {
 	maze := parseMaze(inputs, nrows, ncols, nInputs)
 	dists, _ := dijkstra(maze.graph, maze.startId)
 	return dists[maze.endId]
+}
+
+func FindFinalInput(inputs []string, nrows, ncols int) string {
+	var i int
+	for i = range inputs {
+		log.Printf("i, inputs[i] = %d, %s", i, inputs[i])
+		if CountSteps(inputs, nrows, ncols, i+1) == maxInt {
+			break
+		}
+	}
+	return inputs[i]
 }
