@@ -250,9 +250,8 @@ func CountSteps(inputs []string, nrows, ncols int, nInputs int) int {
 
 func FindFinalInput(inputs []string, nrows, ncols int) string {
 	var i int
-	for i = range inputs {
-		log.Printf("i, inputs[i] = %d, %s", i, inputs[i])
-		if CountSteps(inputs, nrows, ncols, i+1) == maxInt {
+	for i = len(inputs); i >= 1; i-- {
+		if CountSteps(inputs, nrows, ncols, i) != maxInt {
 			break
 		}
 	}
