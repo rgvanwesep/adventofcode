@@ -131,6 +131,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day16.CountTiles(inputLines)))
 	case [2]int{17, 1}:
 		writer.WriteString(fmt.Sprintln(day17.ExecProgram(inputLines)))
+	case [2]int{17, 2}:
+		writer.WriteString(fmt.Sprintln(day17.FindRegisterAValue(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}

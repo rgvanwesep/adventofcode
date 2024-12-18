@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -42,9 +43,10 @@ type instruction struct {
 }
 
 type emulator[T ~int | ~int32 | ~int64] struct {
-	registers [3]T
-	program   []instruction
-	instPtr   int
+	registers     [3]T
+	program       []instruction
+	instPtr       int
+	programOctals []uint8
 }
 
 func (e *emulator[T]) execute() string {
@@ -220,6 +222,7 @@ func parseEmulator[T ~int | ~int32 | ~int64](inputs []string) emulator[T] {
 	}
 	matcher = regexp.MustCompile(progPattern)
 	program := []instruction{}
+	programOctals := []uint8{}
 	match := matcher.FindStringSubmatch(inputs[4])
 	split := strings.Split(match[1], ",")
 	for i := 0; i < len(split)-1; i += 2 {
@@ -227,15 +230,18 @@ func parseEmulator[T ~int | ~int32 | ~int64](inputs []string) emulator[T] {
 		if err != nil {
 			log.Panicf("Could not parse opcode value from input %q", inputs[4])
 		}
+		programOctals = append(programOctals, uint8(opcode))
 		operand, err := strconv.ParseUint(split[i+1], 10, 3)
 		if err != nil {
 			log.Panicf("Could not parse operand value from input %q", inputs[4])
 		}
+		programOctals = append(programOctals, uint8(operand))
 		program = append(program, instruction{uint8(opcode), uint8(operand)})
 	}
 	return emulator[T]{
-		registers: registers,
-		program:   program,
+		registers:     registers,
+		program:       program,
+		programOctals: programOctals,
 	}
 }
 
@@ -243,4 +249,40 @@ func ExecProgram(inputs []string) string {
 	e := parseEmulator[int](inputs)
 	log.Printf("Running with emulator:\n%s", e)
 	return e.execute()
+}
+
+func FindRegisterAValue(inputs []string) int {
+	e := parseEmulator[int](inputs)
+	outputTable := make([]uint8, 1<<10)
+	for i := range outputTable {
+		e.registers[regA] = i
+		e.instPtr = 0
+		outputTable[i] = e.execute()[0] % 8
+	}
+	reverseLookup := make([][]int, 8)
+	for i, n := range outputTable {
+		reverseLookup[n] = append(reverseLookup[n], i)
+	}
+	possibleRegA := slices.Clone(reverseLookup[e.programOctals[0]])
+	for i, output := range e.programOctals[1:] {
+		newPossibleRegA := []int{}
+		for _, lowerRegA := range possibleRegA {
+			for _, upperRegA := range reverseLookup[output] {
+				if lowerRegA>>(3*(i+1)) == upperRegA%(1<<7) {
+					nextOctal := upperRegA >> 7
+					newPossibleRegA = append(newPossibleRegA,
+						lowerRegA^(nextOctal<<(3*i+10)),
+					)
+				}
+			}
+		}
+		possibleRegA = newPossibleRegA
+	}
+	minRegA := possibleRegA[0]
+	for _, n := range possibleRegA[1:] {
+		if n < minRegA {
+			minRegA = n
+		}
+	}
+	return minRegA
 }
