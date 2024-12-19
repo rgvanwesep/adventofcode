@@ -34,3 +34,36 @@ func TestCountSteps(t *testing.T) {
 		}
 	}
 }
+
+func TestSumCombinations(t *testing.T) {
+	cases := []struct {
+		inputs   []string
+		expected int
+	}{
+		{
+			inputs: []string{
+				"r, wr, b, g, bwu, rb, gb, br",
+				"",
+				"brwrr",
+				"bggr",
+				"gbbr",
+				"rrbgbr",
+				"ubwu",
+				"bwurrg",
+				"brgr",
+				"bbrgwb",
+			},
+			expected: 16,
+		},
+	}
+	for _, c := range cases {
+		result := SumCombinations(c.inputs)
+		if result != c.expected {
+			t.Errorf("SumCombinations(%q) == %d, expected %d",
+				c.inputs,
+				result,
+				c.expected,
+			)
+		}
+	}
+}
