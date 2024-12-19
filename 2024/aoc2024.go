@@ -11,6 +11,7 @@ import (
 	"aoc2024/day16"
 	"aoc2024/day17"
 	"aoc2024/day18"
+	"aoc2024/day19"
 	"aoc2024/day2"
 	"aoc2024/day3"
 	"aoc2024/day4"
@@ -138,6 +139,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day18.CountSteps(inputLines, 71, 71, 1024)))
 	case [2]int{18, 2}:
 		writer.WriteString(fmt.Sprintln(day18.FindFinalInput(inputLines, 71, 71)))
+	case [2]int{19, 1}:
+		writer.WriteString(fmt.Sprintln(day19.CountPossible(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
