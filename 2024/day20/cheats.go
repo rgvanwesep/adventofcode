@@ -354,7 +354,7 @@ func countCheatsBySavings(inputs []string, maxCost int, threshold int) map[int]i
 			wallEntryIdsLookup[m.cheats[i].endpoints[0].wallGraphId],
 			wallEntryIdsLookup[m.cheats[i].endpoints[1].wallGraphId],
 		}
-		if wallDistIndices[0] > wallDistIndices[1]{
+		if wallDistIndices[0] > wallDistIndices[1] {
 			m.cheats[i].cost = wallDists[wallDistIndices[0]][wallDistIndices[1]]
 		} else {
 			m.cheats[i].cost = wallDists[wallDistIndices[1]][wallDistIndices[0]]
