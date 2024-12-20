@@ -55,16 +55,6 @@ type vector struct {
 	x, y int
 }
 
-func (v vector) less(than vector) bool {
-	if v.y < than.y {
-		return true
-	}
-	if v.y == than.y && v.x < than.x {
-		return true
-	}
-	return false
-}
-
 type grid struct {
 	nrows, ncols int
 	values       []byte
