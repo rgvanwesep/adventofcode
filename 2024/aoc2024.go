@@ -13,6 +13,7 @@ import (
 	"aoc2024/day18"
 	"aoc2024/day19"
 	"aoc2024/day2"
+	"aoc2024/day20"
 	"aoc2024/day3"
 	"aoc2024/day4"
 	"aoc2024/day5"
@@ -143,6 +144,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day19.CountPossible(inputLines)))
 	case [2]int{19, 2}:
 		writer.WriteString(fmt.Sprintln(day19.SumCombinations(inputLines)))
+	case [2]int{20, 1}:
+		writer.WriteString(fmt.Sprintln(day20.CountCheats(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
