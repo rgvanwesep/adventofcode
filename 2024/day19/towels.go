@@ -2,30 +2,6 @@ package day19
 
 import "strings"
 
-type stack[T any] struct {
-	values []T
-}
-
-func newStack[T any]() stack[T] {
-	return stack[T]{
-		values: []T{},
-	}
-}
-
-func (s *stack[T]) push(v T) {
-	s.values = append(s.values, v)
-}
-
-func (s *stack[T]) pop() (v T, ok bool) {
-	size := len(s.values)
-	if size > 0 {
-		v = s.values[size-1]
-		s.values = s.values[:size-1]
-		ok = true
-	}
-	return
-}
-
 type basePatterns struct {
 	patterns []string
 }
@@ -34,6 +10,8 @@ func (b basePatterns) countPossibles(pattern string) int {
 	possibles := make([]bool, len(pattern)+1)
 	possibles[0] = true
 	matches := make([][]int, len(pattern)+1)
+	counts := make([]int, len(pattern)+1)
+	counts[0] = 1
 	for i := 1; i < len(possibles); i++ {
 		for k, basePattern := range b.patterns {
 			if i-len(basePattern) >= 0 && possibles[i-len(basePattern)] {
@@ -50,34 +28,11 @@ func (b basePatterns) countPossibles(pattern string) int {
 				}
 			}
 		}
-	}
-	matchesByLen := make([]map[int]int, len(matches))
-	for i, m := range matches {
-		matchesByLen[i] = map[int]int{}
-		for _, k := range m {
-			matchesByLen[i][len(b.patterns[k])]++
+		for _, k := range matches[i] {
+			counts[i] += counts[i-len(b.patterns[k])]
 		}
 	}
-	count := 0
-	s := newStack[[3]int]()
-	for l, c := range matchesByLen[len(pattern)] {
-		s.push([3]int{len(pattern), l, c})
-	}
-	for {
-		if pair, ok := s.pop(); ok {
-			prevIndex := pair[0] - pair[1]
-			if prevIndex > 0 {
-				for l, c := range matchesByLen[prevIndex] {
-					s.push([3]int{prevIndex, l, pair[2] * c})
-				}
-			} else {
-				count += pair[2]
-			}
-		} else {
-			break
-		}
-	}
-	return count
+	return counts[len(pattern)]
 }
 
 func (b basePatterns) isPossible(pattern string) bool {
