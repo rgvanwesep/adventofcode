@@ -26,20 +26,11 @@ func (s *stack[T]) pop() (v T, ok bool) {
 	return
 }
 
-func (s *stack[T]) clear() {
-	s.values = []T{}
-}
-
-type combination struct {
-	currIndex int
-	values    []int
-}
-
 type basePatterns struct {
 	patterns []string
 }
 
-func (b basePatterns) allPossibles(pattern string) [][]int {
+func (b basePatterns) countPossibles(pattern string) int {
 	possibles := make([]bool, len(pattern)+1)
 	possibles[0] = true
 	matches := make([][]int, len(pattern)+1)
@@ -60,31 +51,37 @@ func (b basePatterns) allPossibles(pattern string) [][]int {
 			}
 		}
 	}
-	combinations := [][]int{}
-	s := newStack[combination]()
-	for _, k := range matches[len(pattern)] {
-		s.push(combination{len(pattern), []int{k}})
+	matchesByLen := make([]map[int]int, len(matches))
+	for i, m := range matches {
+		matchesByLen[i] = map[int]int{}
+		for _, k := range m {
+			matchesByLen[i][len(b.patterns[k])]++
+		}
+	}
+	count := 0
+	s := newStack[[3]int]()
+	for l, c := range matchesByLen[len(pattern)] {
+		s.push([3]int{len(pattern), l, c})
 	}
 	for {
-		if c, ok := s.pop(); ok {
-			prevIndex := c.currIndex - len(b.patterns[c.values[0]])
+		if pair, ok := s.pop(); ok {
+			prevIndex := pair[0] - pair[1]
 			if prevIndex > 0 {
-				for _, k := range matches[prevIndex] {
-					s.push(combination{prevIndex, append([]int{k}, c.values...)})
+				for l, c := range matchesByLen[prevIndex] {
+					s.push([3]int{prevIndex, l, pair[2] * c})
 				}
 			} else {
-				combinations = append(combinations, c.values)
+				count += pair[2]
 			}
 		} else {
 			break
 		}
 	}
-	return combinations
+	return count
 }
 
 func (b basePatterns) isPossible(pattern string) bool {
-	combinations := b.allPossibles(pattern)
-	return len(combinations) > 0
+	return b.countPossibles(pattern) > 0
 }
 
 func parsePatterns(inputs []string) (basePatterns, []string) {
@@ -106,7 +103,7 @@ func SumCombinations(inputs []string) int {
 	sum := 0
 	base, patterns := parsePatterns(inputs)
 	for _, pattern := range patterns {
-		sum += len(base.allPossibles(pattern))
+		sum += base.countPossibles(pattern)
 	}
 	return sum
 }
