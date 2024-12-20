@@ -145,7 +145,7 @@ func main() {
 	case [2]int{19, 2}:
 		writer.WriteString(fmt.Sprintln(day19.SumCombinations(inputLines)))
 	case [2]int{20, 1}:
-		writer.WriteString(fmt.Sprintln(day20.CountCheats(inputLines)))
+		writer.WriteString(fmt.Sprintln(day20.CountCheats(inputLines, 2, 100)))
 	default:
 		log.Fatal("Invalid day or part")
 	}

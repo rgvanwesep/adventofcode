@@ -55,6 +55,16 @@ type vector struct {
 	x, y int
 }
 
+func (v vector) less(than vector) bool {
+	if v.y < than.y {
+		return true
+	}
+	if v.y == than.y && v.x < than.x {
+		return true
+	}
+	return false
+}
+
 type grid struct {
 	nrows, ncols int
 	values       []byte
@@ -132,6 +142,10 @@ func (g *graph[T]) addEdge(id int, conn connection) {
 	g.adjacencies[id] = append(g.adjacencies[id], conn)
 }
 
+func (g *graph[T]) getNode(id int) T {
+	return g.nodes[id]
+}
+
 func (g *graph[T]) allNodes() iter.Seq2[int, T] {
 	return func(yield func(int, T) bool) {
 		for i, n := range g.nodes {
@@ -184,6 +198,7 @@ func dijkstra[T any](g *graph[T], startId int) ([]int, [][]int) {
 
 type endpoint struct {
 	id                int
+	wallGraphId       int
 	position          vector
 	distanceFromStart int
 	distanceToEnd     int
@@ -206,6 +221,8 @@ type maze struct {
 	graph          *graph[vector]
 	startId, endId int
 	cheats         []bridge
+	wallGraph      *graph[vector]
+	wallEntryIds   []int
 }
 
 func parseGrid(inputs []string) *grid {
@@ -227,35 +244,27 @@ func parseMaze(inputs []string) maze {
 	gri := parseGrid(inputs)
 	gra := newGraph[vector]()
 	cheats := []bridge{}
+	wallGraph := newGraph[vector]()
+	wallEntryIds := []int{}
 	nodeIds := map[vector]int{}
+	wallNodeIds := map[vector]int{}
+	wallGraphPositions := newSet[vector]()
 	for v, c := range gri.all() {
 		if c == wallChar {
-			v1 := vector{v.x - 1, v.y}
-			v2 := vector{v.x + 1, v.y}
-			c1, ok1 := gri.get(v1)
-			c2, ok2 := gri.get(v2)
-			if ok1 && ok2 && c1 != wallChar && c2 != wallChar {
-				cheats = append(cheats, bridge{
-					endpoints: [2]endpoint{
-						{position: v1},
-						{position: v2},
-					},
-					cost: 2,
-				})
+			wallGraphPositions.add(v)
+			wallNodeIds[v] = wallGraph.addNode(v)
+			neighbors := [4]vector{
+				{v.x, v.y - 1},
+				{v.x, v.y + 1},
+				{v.x - 1, v.y},
+				{v.x + 1, v.y},
 			}
-
-			v1 = vector{v.x, v.y - 1}
-			v2 = vector{v.x, v.y + 1}
-			c1, ok1 = gri.get(v1)
-			c2, ok2 = gri.get(v2)
-			if ok1 && ok2 && c1 != wallChar && c2 != wallChar {
-				cheats = append(cheats, bridge{
-					endpoints: [2]endpoint{
-						{position: v1},
-						{position: v2},
-					},
-					cost: 2,
-				})
+			for _, vn := range neighbors {
+				if cn, ok := gri.get(vn); ok && cn != wallChar && !wallGraphPositions.contains(vn) {
+					wallGraphPositions.add(vn)
+					wallNodeIds[vn] = wallGraph.addNode(vn)
+					wallEntryIds = append(wallEntryIds, wallNodeIds[vn])
+				}
 			}
 		} else {
 			nodeIds[v] = gra.addNode(v)
@@ -266,9 +275,23 @@ func parseMaze(inputs []string) maze {
 			endId = nodeIds[v]
 		}
 	}
-	for i := range cheats {
-		for j := range cheats[i].endpoints {
-			cheats[i].endpoints[j].id = nodeIds[cheats[i].endpoints[j].position]
+	for i := range wallEntryIds {
+		vi := wallGraph.getNode(wallEntryIds[i])
+		ei := endpoint{
+			id:          nodeIds[vi],
+			wallGraphId: wallEntryIds[i],
+			position:    vi,
+		}
+		for j := range wallEntryIds[:i] {
+			vj := wallGraph.getNode(wallEntryIds[j])
+			ej := endpoint{
+				id:          nodeIds[vj],
+				wallGraphId: wallEntryIds[j],
+				position:    vj,
+			}
+			cheats = append(cheats, bridge{
+				endpoints: [2]endpoint{ei, ej},
+			})
 		}
 	}
 	for nodeId, node := range gra.allNodes() {
@@ -287,39 +310,64 @@ func parseMaze(inputs []string) maze {
 			}
 		}
 	}
+	for nodeId, node := range wallGraph.allNodes() {
+		neighbors := [4]vector{
+			{node.x, node.y - 1},
+			{node.x, node.y + 1},
+			{node.x - 1, node.y},
+			{node.x + 1, node.y},
+		}
+		for _, neighbor := range neighbors {
+			if _, ok := gri.get(neighbor); ok && wallGraphPositions.contains(neighbor) {
+				wallGraph.addEdge(nodeId, connection{
+					nodeId:     wallNodeIds[neighbor],
+					edgeWeight: 1,
+				})
+			}
+		}
+	}
 	return maze{
-		grid:    gri,
-		graph:   gra,
-		startId: startId,
-		endId:   endId,
-		cheats:  cheats,
+		grid:         gri,
+		graph:        gra,
+		startId:      startId,
+		endId:        endId,
+		cheats:       cheats,
+		wallGraph:    wallGraph,
+		wallEntryIds: wallEntryIds,
 	}
 }
 
-func countCheatsBySavings(inputs []string) map[int]int {
+func countCheatsBySavings(inputs []string, maxCost int, threshold int) map[int]int {
 	cheatsBySavings := map[int]int{}
 	m := parseMaze(inputs)
 	startDists, _ := dijkstra(m.graph, m.startId)
 	endDists, _ := dijkstra(m.graph, m.endId)
+	wallDists := map[int][]int{}
+	for _, entryId := range m.wallEntryIds {
+		wallDists[entryId], _ = dijkstra(m.wallGraph, entryId)
+	}
 	baseline := startDists[m.endId]
 	for i := range m.cheats {
 		for j := range m.cheats[i].endpoints {
 			m.cheats[i].endpoints[j].distanceFromStart = startDists[m.cheats[i].endpoints[j].id]
 			m.cheats[i].endpoints[j].distanceToEnd = endDists[m.cheats[i].endpoints[j].id]
 		}
-		savings := baseline - m.cheats[i].getDistanceThrough()
-		cheatsBySavings[savings]++
+		m.cheats[i].cost = wallDists[m.cheats[i].endpoints[0].wallGraphId][m.cheats[i].endpoints[1].wallGraphId]
+		if m.cheats[i].cost <= maxCost {
+			savings := baseline - m.cheats[i].getDistanceThrough()
+			if savings >= threshold {
+				cheatsBySavings[savings]++
+			}
+		}
 	}
 	return cheatsBySavings
 }
 
-func CountCheats(inputs []string) int {
-	cheatsBySavings := countCheatsBySavings(inputs)
+func CountCheats(inputs []string, maxCost int, threshold int) int {
+	cheatsBySavings := countCheatsBySavings(inputs, maxCost, threshold)
 	sum := 0
-	for savings, count := range cheatsBySavings {
-		if savings >= threshold {
-			sum += count
-		}
+	for _, count := range cheatsBySavings {
+		sum += count
 	}
 	return sum
 }
