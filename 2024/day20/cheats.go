@@ -332,9 +332,17 @@ func countCheatsBySavings(inputs []string, maxCost int, threshold int) map[int]i
 	m := parseMaze(inputs)
 	startDists, _ := dijkstra(m.graph, m.startId)
 	endDists, _ := dijkstra(m.graph, m.endId)
-	wallDists := map[int][]int{}
-	for _, entryId := range m.wallEntryIds {
-		wallDists[entryId], _ = dijkstra(m.wallGraph, entryId)
+	wallEntryIdsLookup := map[int]int{}
+	for i, entryId := range m.wallEntryIds {
+		wallEntryIdsLookup[entryId] = i
+	}
+	wallDists := make([][]int, len(m.wallEntryIds))
+	for i := range m.wallEntryIds {
+		wallDists[i] = make([]int, len(m.wallEntryIds))
+		dists, _ := dijkstra(m.wallGraph, m.wallEntryIds[i])
+		for j := range m.wallEntryIds[:i] {
+			wallDists[i][j] = dists[m.wallEntryIds[j]]
+		}
 	}
 	baseline := startDists[m.endId]
 	for i := range m.cheats {
@@ -342,7 +350,15 @@ func countCheatsBySavings(inputs []string, maxCost int, threshold int) map[int]i
 			m.cheats[i].endpoints[j].distanceFromStart = startDists[m.cheats[i].endpoints[j].id]
 			m.cheats[i].endpoints[j].distanceToEnd = endDists[m.cheats[i].endpoints[j].id]
 		}
-		m.cheats[i].cost = wallDists[m.cheats[i].endpoints[0].wallGraphId][m.cheats[i].endpoints[1].wallGraphId]
+		wallDistIndices := [2]int{
+			wallEntryIdsLookup[m.cheats[i].endpoints[0].wallGraphId],
+			wallEntryIdsLookup[m.cheats[i].endpoints[1].wallGraphId],
+		}
+		if wallDistIndices[0] > wallDistIndices[1]{
+			m.cheats[i].cost = wallDists[wallDistIndices[0]][wallDistIndices[1]]
+		} else {
+			m.cheats[i].cost = wallDists[wallDistIndices[1]][wallDistIndices[0]]
+		}
 		if m.cheats[i].cost <= maxCost {
 			savings := baseline - m.cheats[i].getDistanceThrough()
 			if savings >= threshold {
