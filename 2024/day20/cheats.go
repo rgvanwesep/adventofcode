@@ -2,6 +2,7 @@ package day20
 
 import (
 	"iter"
+	"log"
 )
 
 const (
@@ -330,20 +331,25 @@ func parseMaze(inputs []string) maze {
 func countCheatsBySavings(inputs []string, maxCost int, threshold int) map[int]int {
 	cheatsBySavings := map[int]int{}
 	m := parseMaze(inputs)
+	log.Print("Calculate distances from start")
 	startDists, _ := dijkstra(m.graph, m.startId)
+	log.Print("Calculate distances from end")
 	endDists, _ := dijkstra(m.graph, m.endId)
 	wallEntryIdsLookup := map[int]int{}
 	for i, entryId := range m.wallEntryIds {
 		wallEntryIdsLookup[entryId] = i
 	}
+	log.Printf("Entry IDs to calculate: %d", len(m.wallEntryIds))
 	wallDists := make([][]int, len(m.wallEntryIds))
 	for i := range m.wallEntryIds {
 		wallDists[i] = make([]int, len(m.wallEntryIds))
+		log.Printf("Calculate distances from i, entryId: %d, %d", i, m.wallEntryIds[i])
 		dists, _ := dijkstra(m.wallGraph, m.wallEntryIds[i])
 		for j := range m.wallEntryIds[:i] {
 			wallDists[i][j] = dists[m.wallEntryIds[j]]
 		}
 	}
+	log.Print("Calculate savings")
 	baseline := startDists[m.endId]
 	for i := range m.cheats {
 		for j := range m.cheats[i].endpoints {
