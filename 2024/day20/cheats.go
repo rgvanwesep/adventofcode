@@ -191,13 +191,14 @@ type endpoint struct {
 
 type bridge struct {
 	endpoints [2]endpoint
+	cost      int
 }
 
 func (b bridge) getDistanceThrough() int {
 	return min(
 		b.endpoints[0].distanceFromStart+b.endpoints[1].distanceToEnd,
 		b.endpoints[1].distanceFromStart+b.endpoints[0].distanceToEnd,
-	) + 2
+	) + b.cost
 }
 
 type maze struct {
@@ -239,6 +240,7 @@ func parseMaze(inputs []string) maze {
 						{position: v1},
 						{position: v2},
 					},
+					cost: 2,
 				})
 			}
 
@@ -252,6 +254,7 @@ func parseMaze(inputs []string) maze {
 						{position: v1},
 						{position: v2},
 					},
+					cost: 2,
 				})
 			}
 		} else {
