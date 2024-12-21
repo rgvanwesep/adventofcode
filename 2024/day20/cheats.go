@@ -214,7 +214,6 @@ type maze struct {
 	grid           *grid
 	graph          *graph[vector]
 	startId, endId int
-	cheats         []bridge
 }
 
 func parseGrid(inputs []string) *grid {
@@ -235,7 +234,6 @@ func parseMaze(inputs []string) maze {
 	var startId, endId int
 	gri := parseGrid(inputs)
 	gra := newGraph[vector]()
-	cheats := []bridge{}
 	nodeIds := map[vector]int{}
 	for v, c := range gri.all() {
 		if c != wallChar {
@@ -245,23 +243,6 @@ func parseMaze(inputs []string) maze {
 			startId = nodeIds[v]
 		} else if c == endChar {
 			endId = nodeIds[v]
-		}
-	}
-	for i, vi := range gra.allNodes() {
-		ei := endpoint{
-			id:       i,
-			position: vi,
-		}
-		for j, vj := range gra.allNodes() {
-			if j < i {
-				ej := endpoint{
-					id:       nodeIds[vj],
-					position: vj,
-				}
-				cheats = append(cheats, bridge{
-					endpoints: [2]endpoint{ei, ej},
-				})
-			}
 		}
 	}
 	for nodeId, node := range gra.allNodes() {
@@ -285,26 +266,41 @@ func parseMaze(inputs []string) maze {
 		graph:   gra,
 		startId: startId,
 		endId:   endId,
-		cheats:  cheats,
 	}
 }
 
 func countCheatsBySavings(inputs []string, maxCost int, threshold int) map[int]int {
+	var cheat bridge
 	cheatsBySavings := map[int]int{}
 	m := parseMaze(inputs)
 	startDists, _ := dijkstra(m.graph, m.startId)
 	endDists, _ := dijkstra(m.graph, m.endId)
 	baseline := startDists[m.endId]
-	for i := range m.cheats {
-		for j := range m.cheats[i].endpoints {
-			m.cheats[i].endpoints[j].distanceFromStart = startDists[m.cheats[i].endpoints[j].id]
-			m.cheats[i].endpoints[j].distanceToEnd = endDists[m.cheats[i].endpoints[j].id]
+	for i, vi := range m.graph.allNodes() {
+		ei := endpoint{
+			id:       i,
+			position: vi,
 		}
-		m.cheats[i].cost = dist(m.cheats[i].endpoints[0].position, m.cheats[i].endpoints[1].position)
-		if m.cheats[i].cost <= maxCost {
-			savings := baseline - m.cheats[i].getDistanceThrough()
-			if savings >= threshold {
-				cheatsBySavings[savings]++
+		for j, vj := range m.graph.allNodes() {
+			if j < i {
+				ej := endpoint{
+					id:       j,
+					position: vj,
+				}
+				cheat = bridge{
+					endpoints: [2]endpoint{ei, ej},
+				}
+				for k := range cheat.endpoints {
+					cheat.endpoints[k].distanceFromStart = startDists[cheat.endpoints[k].id]
+					cheat.endpoints[k].distanceToEnd = endDists[cheat.endpoints[k].id]
+				}
+				cheat.cost = dist(cheat.endpoints[0].position, cheat.endpoints[1].position)
+				if cheat.cost <= maxCost {
+					savings := baseline - cheat.getDistanceThrough()
+					if savings >= threshold {
+						cheatsBySavings[savings]++
+					}
+				}
 			}
 		}
 	}
