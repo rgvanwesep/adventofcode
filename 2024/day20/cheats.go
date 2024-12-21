@@ -1,9 +1,6 @@
 package day20
 
-import (
-	"iter"
-	"log"
-)
+import "iter"
 
 const (
 	emptyChar = '.'
@@ -54,6 +51,17 @@ func (s *set[T]) size() int {
 
 type vector struct {
 	x, y int
+}
+
+func dist(v1, v2 vector) int {
+	var x, y int
+	if x = v1.x - v2.x; x < 0 {
+		x = -x
+	}
+	if y = v1.y - v2.y; y < 0 {
+		y = -y
+	}
+	return x + y
 }
 
 type grid struct {
@@ -133,10 +141,6 @@ func (g *graph[T]) addEdge(id int, conn connection) {
 	g.adjacencies[id] = append(g.adjacencies[id], conn)
 }
 
-func (g *graph[T]) getNode(id int) T {
-	return g.nodes[id]
-}
-
 func (g *graph[T]) allNodes() iter.Seq2[int, T] {
 	return func(yield func(int, T) bool) {
 		for i, n := range g.nodes {
@@ -189,7 +193,6 @@ func dijkstra[T any](g *graph[T], startId int) ([]int, [][]int) {
 
 type endpoint struct {
 	id                int
-	wallGraphId       int
 	position          vector
 	distanceFromStart int
 	distanceToEnd     int
@@ -212,8 +215,6 @@ type maze struct {
 	graph          *graph[vector]
 	startId, endId int
 	cheats         []bridge
-	wallGraph      *graph[vector]
-	wallEntryIds   []int
 }
 
 func parseGrid(inputs []string) *grid {
@@ -235,29 +236,9 @@ func parseMaze(inputs []string) maze {
 	gri := parseGrid(inputs)
 	gra := newGraph[vector]()
 	cheats := []bridge{}
-	wallGraph := newGraph[vector]()
-	wallEntryIds := []int{}
 	nodeIds := map[vector]int{}
-	wallNodeIds := map[vector]int{}
-	wallGraphPositions := newSet[vector]()
 	for v, c := range gri.all() {
-		if c == wallChar {
-			wallGraphPositions.add(v)
-			wallNodeIds[v] = wallGraph.addNode(v)
-			neighbors := [4]vector{
-				{v.x, v.y - 1},
-				{v.x, v.y + 1},
-				{v.x - 1, v.y},
-				{v.x + 1, v.y},
-			}
-			for _, vn := range neighbors {
-				if cn, ok := gri.get(vn); ok && cn != wallChar && !wallGraphPositions.contains(vn) {
-					wallGraphPositions.add(vn)
-					wallNodeIds[vn] = wallGraph.addNode(vn)
-					wallEntryIds = append(wallEntryIds, wallNodeIds[vn])
-				}
-			}
-		} else {
+		if c != wallChar {
 			nodeIds[v] = gra.addNode(v)
 		}
 		if c == startChar {
@@ -266,23 +247,21 @@ func parseMaze(inputs []string) maze {
 			endId = nodeIds[v]
 		}
 	}
-	for i := range wallEntryIds {
-		vi := wallGraph.getNode(wallEntryIds[i])
+	for i, vi := range gra.allNodes() {
 		ei := endpoint{
-			id:          nodeIds[vi],
-			wallGraphId: wallEntryIds[i],
-			position:    vi,
+			id:       i,
+			position: vi,
 		}
-		for j := range wallEntryIds[:i] {
-			vj := wallGraph.getNode(wallEntryIds[j])
-			ej := endpoint{
-				id:          nodeIds[vj],
-				wallGraphId: wallEntryIds[j],
-				position:    vj,
+		for j, vj := range gra.allNodes() {
+			if j < i {
+				ej := endpoint{
+					id:       nodeIds[vj],
+					position: vj,
+				}
+				cheats = append(cheats, bridge{
+					endpoints: [2]endpoint{ei, ej},
+				})
 			}
-			cheats = append(cheats, bridge{
-				endpoints: [2]endpoint{ei, ej},
-			})
 		}
 	}
 	for nodeId, node := range gra.allNodes() {
@@ -301,70 +280,27 @@ func parseMaze(inputs []string) maze {
 			}
 		}
 	}
-	for nodeId, node := range wallGraph.allNodes() {
-		neighbors := [4]vector{
-			{node.x, node.y - 1},
-			{node.x, node.y + 1},
-			{node.x - 1, node.y},
-			{node.x + 1, node.y},
-		}
-		for _, neighbor := range neighbors {
-			if _, ok := gri.get(neighbor); ok && wallGraphPositions.contains(neighbor) {
-				wallGraph.addEdge(nodeId, connection{
-					nodeId:     wallNodeIds[neighbor],
-					edgeWeight: 1,
-				})
-			}
-		}
-	}
 	return maze{
-		grid:         gri,
-		graph:        gra,
-		startId:      startId,
-		endId:        endId,
-		cheats:       cheats,
-		wallGraph:    wallGraph,
-		wallEntryIds: wallEntryIds,
+		grid:    gri,
+		graph:   gra,
+		startId: startId,
+		endId:   endId,
+		cheats:  cheats,
 	}
 }
 
 func countCheatsBySavings(inputs []string, maxCost int, threshold int) map[int]int {
 	cheatsBySavings := map[int]int{}
 	m := parseMaze(inputs)
-	log.Print("Calculate distances from start")
 	startDists, _ := dijkstra(m.graph, m.startId)
-	log.Print("Calculate distances from end")
 	endDists, _ := dijkstra(m.graph, m.endId)
-	wallEntryIdsLookup := map[int]int{}
-	for i, entryId := range m.wallEntryIds {
-		wallEntryIdsLookup[entryId] = i
-	}
-	log.Printf("Entry IDs to calculate: %d", len(m.wallEntryIds))
-	wallDists := make([][]int, len(m.wallEntryIds))
-	for i := range m.wallEntryIds {
-		wallDists[i] = make([]int, len(m.wallEntryIds))
-		log.Printf("Calculate distances from i, entryId: %d, %d", i, m.wallEntryIds[i])
-		dists, _ := dijkstra(m.wallGraph, m.wallEntryIds[i])
-		for j := range m.wallEntryIds[:i] {
-			wallDists[i][j] = dists[m.wallEntryIds[j]]
-		}
-	}
-	log.Print("Calculate savings")
 	baseline := startDists[m.endId]
 	for i := range m.cheats {
 		for j := range m.cheats[i].endpoints {
 			m.cheats[i].endpoints[j].distanceFromStart = startDists[m.cheats[i].endpoints[j].id]
 			m.cheats[i].endpoints[j].distanceToEnd = endDists[m.cheats[i].endpoints[j].id]
 		}
-		wallDistIndices := [2]int{
-			wallEntryIdsLookup[m.cheats[i].endpoints[0].wallGraphId],
-			wallEntryIdsLookup[m.cheats[i].endpoints[1].wallGraphId],
-		}
-		if wallDistIndices[0] > wallDistIndices[1] {
-			m.cheats[i].cost = wallDists[wallDistIndices[0]][wallDistIndices[1]]
-		} else {
-			m.cheats[i].cost = wallDists[wallDistIndices[1]][wallDistIndices[0]]
-		}
+		m.cheats[i].cost = dist(m.cheats[i].endpoints[0].position, m.cheats[i].endpoints[1].position)
 		if m.cheats[i].cost <= maxCost {
 			savings := baseline - m.cheats[i].getDistanceThrough()
 			if savings >= threshold {
