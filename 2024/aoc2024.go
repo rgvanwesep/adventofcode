@@ -14,6 +14,7 @@ import (
 	"aoc2024/day19"
 	"aoc2024/day2"
 	"aoc2024/day20"
+	"aoc2024/day21"
 	"aoc2024/day3"
 	"aoc2024/day4"
 	"aoc2024/day5"
@@ -148,6 +149,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day20.CountCheats(inputLines, 2, 100)))
 	case [2]int{20, 2}:
 		writer.WriteString(fmt.Sprintln(day20.CountCheats(inputLines, 20, 100)))
+	case [2]int{21, 1}:
+		writer.WriteString(fmt.Sprintln(day21.CalcComplexity(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
