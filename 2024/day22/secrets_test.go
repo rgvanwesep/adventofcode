@@ -39,3 +39,28 @@ func TestCalcFinalSecret(t *testing.T) {
 		}
 	}
 }
+
+func TestSumSellPrices(t *testing.T) {
+	cases := []struct {
+		inputs   []string
+		expected int
+	}{
+		{
+			inputs: []string{
+				"1",
+				"2",
+				"3",
+				"2024",
+			},
+			expected: 23,
+		},
+	}
+	for _, c := range cases {
+		result := SumSellPrices(c.inputs)
+		if result != c.expected {
+			t.Errorf("SumSellPrices(%q) == %d, expected %d",
+				c.inputs, result, c.expected,
+			)
+		}
+	}
+}
