@@ -162,7 +162,7 @@ func isValidEdge(from string, to string) bool {
 	return false
 }
 
-func getShortestSequence(input string) []byte {
+func getShortestSequenceLength(input string) int {
 	g := newGraph[string]()
 	nodeIds := map[string]int{}
 	for _, state := range getAllStates() {
@@ -175,20 +175,21 @@ func getShortestSequence(input string) []byte {
 			}
 		}
 	}
+	totalDist := 0
 	start := "AAA"
-	dists := [4][]int{}
-	segmentDists, _ := dijkstra(g, nodeIds[start])
-	for _, state := range getAllStatesEndingIn(input[0]) {
-		dists[0] = append(dists[0], segmentDists[nodeIds[state]])
-		
+	for i := range input {
+		end := string([]byte{'A', 'A', input[i]})
+		dists, _ := dijkstra(g, nodeIds[start])
+		totalDist += dists[nodeIds[end]] + 1
+		start = end
 	}
-	return []byte{}
+	return totalDist
 }
 
 func CalcComplexity(inputs []string) int {
 	sum := 0
 	for _, input := range inputs {
-		sum += getNumericPart(input) * len(getShortestSequence(input))
+		sum += getNumericPart(input) * getShortestSequenceLength(input)
 	}
 	return sum
 }
