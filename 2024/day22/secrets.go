@@ -105,23 +105,6 @@ func generatePriceChangeSequences(priceChanges []int) []int32 {
 	return seqs
 }
 
-func findChangeSequence(seq [4]int, priceChanges []int) (int, bool) {
-	n := len(priceChanges) - len(seq)
-	j := 0
-	isMatch := false
-	for i := range n {
-		isMatch = seq[0] == priceChanges[i]
-		for k := range 3 {
-			isMatch = isMatch && seq[k+1] == priceChanges[i+k+1]
-		}
-		if isMatch {
-			j = i + 4
-			break
-		}
-	}
-	return j, isMatch
-}
-
 func findChangeSequenceFast(seq int32, priceChanges []int32) (int, bool) {
 	n := len(priceChanges)
 	j := 0
@@ -136,38 +119,12 @@ func findChangeSequenceFast(seq int32, priceChanges []int32) (int, bool) {
 	return j, isMatch
 }
 
-func findSellPrice(seq [4]int, priceChanges []int, prices []int) int {
-	sellPrice := 0
-	if i, ok := findChangeSequence(seq, priceChanges); ok {
-		sellPrice = prices[i]
-	}
-	return sellPrice
-}
-
 func findSellPriceFast(seq int32, priceChanges []int32, prices []int) int {
 	sellPrice := 0
 	if i, ok := findChangeSequenceFast(seq, priceChanges); ok {
 		sellPrice = prices[i]
 	}
 	return sellPrice
-}
-
-var changeSequences iter.Seq[[4]int] = func(yield func([4]int) bool) {
-	changeValues := [19]int{}
-	for i, j := 0, -9; j <= 9; i, j = i+1, j+1 {
-		changeValues[i] = j
-	}
-	for _, i := range changeValues {
-		for _, j := range changeValues {
-			for _, k := range changeValues {
-				for _, l := range changeValues {
-					if !yield([4]int{i, j, k, l}) {
-						break
-					}
-				}
-			}
-		}
-	}
 }
 
 var changeSequencesFast iter.Seq[int32] = func(yield func(int32) bool) {
