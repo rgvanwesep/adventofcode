@@ -16,6 +16,7 @@ import (
 	"aoc2024/day20"
 	"aoc2024/day21"
 	"aoc2024/day22"
+	"aoc2024/day23"
 	"aoc2024/day3"
 	"aoc2024/day4"
 	"aoc2024/day5"
@@ -156,6 +157,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day22.SumSecrets(inputLines)))
 	case [2]int{22, 2}:
 		writer.WriteString(fmt.Sprintln(day22.SumSellPrices(inputLines)))
+	case [2]int{23, 1}:
+		writer.WriteString(fmt.Sprintln(day23.CountLANs(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
