@@ -91,6 +91,20 @@ func generatePriceChanges(prices []int) []int {
 	return priceChanges
 }
 
+func generatePriceChangeSequences(priceChanges []int) []int32 {
+	n := len(priceChanges) - 4
+	seqs := make([]int32, n)
+	for i := range n {
+		seq := int32(priceChanges[i])
+		for j := range 3 {
+			seq <<= 8
+			seq ^= int32(priceChanges[i+j+1])
+		}
+		seqs[i] = seq
+	}
+	return seqs
+}
+
 func findChangeSequence(seq [4]int, priceChanges []int) (int, bool) {
 	n := len(priceChanges) - len(seq)
 	j := 0
@@ -108,9 +122,31 @@ func findChangeSequence(seq [4]int, priceChanges []int) (int, bool) {
 	return j, isMatch
 }
 
+func findChangeSequenceFast(seq int32, priceChanges []int32) (int, bool) {
+	n := len(priceChanges)
+	j := 0
+	isMatch := false
+	for i := range n {
+		isMatch = seq == priceChanges[i]
+		if isMatch {
+			j = i + 4
+			break
+		}
+	}
+	return j, isMatch
+}
+
 func findSellPrice(seq [4]int, priceChanges []int, prices []int) int {
 	sellPrice := 0
 	if i, ok := findChangeSequence(seq, priceChanges); ok {
+		sellPrice = prices[i]
+	}
+	return sellPrice
+}
+
+func findSellPriceFast(seq int32, priceChanges []int32, prices []int) int {
+	sellPrice := 0
+	if i, ok := findChangeSequenceFast(seq, priceChanges); ok {
 		sellPrice = prices[i]
 	}
 	return sellPrice
@@ -134,24 +170,51 @@ var changeSequences iter.Seq[[4]int] = func(yield func([4]int) bool) {
 	}
 }
 
+var changeSequencesFast iter.Seq[int32] = func(yield func(int32) bool) {
+	changeValues := [19]int{}
+	for i, j := 0, -9; j <= 9; i, j = i+1, j+1 {
+		changeValues[i] = j
+	}
+	for _, i := range changeValues {
+		for _, j := range changeValues {
+			for _, k := range changeValues {
+				for _, l := range changeValues {
+					seq := int32(i)
+					seq <<= 8
+					seq ^= int32(j)
+					seq <<= 8
+					seq ^= int32(k)
+					seq <<= 8
+					seq ^= int32(l)
+					if !yield(seq) {
+						break
+					}
+				}
+			}
+		}
+	}
+}
+
 func SumSellPrices(inputs []string) int {
 	const nSecrets = 2000
 	nBuyers := len(inputs)
 	prices := make([][]int, nBuyers)
 	priceChanges := make([][]int, nBuyers)
+	priceChangeSequences := make([][]int32, nBuyers)
 	for i, input := range inputs {
 		if seed, err := strconv.Atoi(input); err == nil {
 			prices[i] = generatePrices(seed, nSecrets)
 			priceChanges[i] = generatePriceChanges(prices[i])
+			priceChangeSequences[i] = generatePriceChangeSequences(priceChanges[i])
 		} else {
 			log.Panicf("Cound not parse seed from input %q", input)
 		}
 	}
 	maxSum := 0
-	for changeSequence := range changeSequences {
+	for changeSequence := range changeSequencesFast {
 		sum := 0
 		for i := range nBuyers {
-			sum += findSellPrice(changeSequence, priceChanges[i], prices[i])
+			sum += findSellPriceFast(changeSequence, priceChangeSequences[i], prices[i])
 		}
 		if sum > maxSum {
 			maxSum = sum
