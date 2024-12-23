@@ -76,16 +76,6 @@ func (g *graph[T]) addEdge(id int, conn connection) {
 	g.adjacencies[id] = append(g.adjacencies[id], conn)
 }
 
-func (g *graph[T]) allNodes() iter.Seq2[int, T] {
-	return func(yield func(int, T) bool) {
-		for i, n := range g.nodes {
-			if !yield(i, n) {
-				break
-			}
-		}
-	}
-}
-
 func dijkstra[T any](g *graph[T], startId int) ([]int, [][]int) {
 	var u int
 	nnodes := len(g.nodes)
@@ -151,9 +141,7 @@ func getAllStates() []string {
 	states := []string{}
 	numericValues := []byte{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A'}
 	for _, b := range numericValues {
-		for _, state := range getAllStatesEndingIn(b) {
-			states = append(states, state)
-		}
+		states = append(states, getAllStatesEndingIn(b)...)
 	}
 	return states
 }
