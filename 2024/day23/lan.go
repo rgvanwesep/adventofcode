@@ -2,6 +2,7 @@ package day23
 
 import (
 	"iter"
+	"log"
 	"slices"
 	"strings"
 )
@@ -48,6 +49,14 @@ func (s *set[T]) size() int {
 	return len(s.values)
 }
 
+func (s *set[T]) clone() set[T] {
+	newSet := newSet[T]()
+	for v := range s.values {
+		newSet.add(v)
+	}
+	return newSet
+}
+
 func intersection[T comparable](s1, s2 set[T]) set[T] {
 	s := newSet[T]()
 	for i := range s1.all() {
@@ -73,6 +82,10 @@ func newGraph[T any]() *graph[T] {
 		nodes:       []T{},
 		adjacencies: [][]connection{},
 	}
+}
+
+func (g *graph[T]) getNode(id int) T {
+	return g.nodes[id]
 }
 
 func (g *graph[T]) addNode(n T) int {
@@ -105,7 +118,44 @@ func (g *graph[T]) allNodes() iter.Seq2[int, T] {
 	}
 }
 
-func CountLANs(inputs []string) int {
+func (g *graph[T]) expandClique(ids set[int]) []set[int] {
+	var shared set[int]
+	for id := range ids.all() {
+		shared = g.getNeighborSet(id)
+		break
+	}
+	for id := range ids.all() {
+		neighbors := g.getNeighborSet(id)
+		shared = intersection(shared, neighbors)
+	}
+	if shared.size() == 0 {
+		return []set[int]{ids}
+	}
+	newCliques := []set[int]{}
+	for id := range shared.all() {
+		newClique := ids.clone()
+		newClique.add(id)
+		newCliques = append(newCliques, g.expandClique(newClique)...)
+	}
+	return newCliques
+}
+
+func (g *graph[T]) allCliques() iter.Seq[set[int]] {
+	return func(yield func(set[int]) bool) {
+		for id := range g.nodes {
+			start := newSet[int]()
+			start.add(id)
+			cliques := g.expandClique(start)
+			for _, clique := range cliques {
+				if !yield(clique) {
+					break
+				}
+			}
+		}
+	}
+}
+
+func parseGraph(inputs []string) *graph[string] {
 	g := newGraph[string]()
 	nodeIds := map[string]int{}
 	for _, input := range inputs {
@@ -123,6 +173,11 @@ func CountLANs(inputs []string) int {
 		g.addEdge(i, connection{j, 1})
 		g.addEdge(j, connection{i, 1})
 	}
+	return g
+}
+
+func CountLANs(inputs []string) int {
+	g := parseGraph(inputs)
 	cliques := newSet[[3]int]()
 	for id, node := range g.allNodes() {
 		if node[0] == 't' {
@@ -139,4 +194,25 @@ func CountLANs(inputs []string) int {
 		}
 	}
 	return cliques.size()
+}
+
+func FindPassword(inputs []string) string {
+	var maxClique set[int]
+	maxCliqueSize := 0
+	g := parseGraph(inputs)
+	for clique := range g.allCliques() {
+		cliqueSize := clique.size()
+		log.Printf("Found clique with size %d", cliqueSize)
+		if cliqueSize > maxCliqueSize {
+			maxClique = clique
+			maxCliqueSize = cliqueSize
+			log.Printf("Found larger clique with size %d", maxCliqueSize)
+		}
+	}
+	names := []string{}
+	for id := range maxClique.all() {
+		names = append(names, g.getNode(id))
+	}
+	slices.Sort(names)
+	return strings.Join(names, ",")
 }

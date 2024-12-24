@@ -159,6 +159,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day22.SumSellPrices(inputLines)))
 	case [2]int{23, 1}:
 		writer.WriteString(fmt.Sprintln(day23.CountLANs(inputLines)))
+	case [2]int{23, 2}:
+		writer.WriteString(fmt.Sprintln(day23.FindPassword(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
