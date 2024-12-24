@@ -2,7 +2,6 @@ package day23
 
 import (
 	"iter"
-	"log"
 	"slices"
 	"strings"
 )
@@ -73,14 +72,16 @@ type connection struct {
 }
 
 type graph[T any] struct {
-	nodes       []T
-	adjacencies [][]connection
+	nodes        []T
+	adjacencies  [][]connection
+	neighborSets []set[int]
 }
 
 func newGraph[T any]() *graph[T] {
 	return &graph[T]{
-		nodes:       []T{},
-		adjacencies: [][]connection{},
+		nodes:        []T{},
+		adjacencies:  [][]connection{},
+		neighborSets: []set[int]{},
 	}
 }
 
@@ -92,20 +93,18 @@ func (g *graph[T]) addNode(n T) int {
 	id := len(g.nodes)
 	g.nodes = append(g.nodes, n)
 	g.adjacencies = append(g.adjacencies, []connection{})
+	s := newSet[int]()
+	g.neighborSets = append(g.neighborSets, s)
 	return id
 }
 
 func (g *graph[T]) addEdge(id int, conn connection) {
 	g.adjacencies[id] = append(g.adjacencies[id], conn)
+	g.neighborSets[id].add(conn.nodeId)
 }
 
 func (g *graph[T]) getNeighborSet(id int) set[int] {
-	conns := g.adjacencies[id]
-	neighbors := newSet[int]()
-	for i := range conns {
-		neighbors.add(conns[i].nodeId)
-	}
-	return neighbors
+	return g.neighborSets[id]
 }
 
 func (g *graph[T]) allNodes() iter.Seq2[int, T] {
@@ -118,26 +117,33 @@ func (g *graph[T]) allNodes() iter.Seq2[int, T] {
 	}
 }
 
-func (g *graph[T]) expandClique(ids set[int]) []set[int] {
-	var shared set[int]
-	for id := range ids.all() {
-		shared = g.getNeighborSet(id)
-		break
+func (g *graph[T]) expandClique(ids set[int]) iter.Seq[set[int]] {
+	return func(yield func(set[int]) bool) {
+		var shared set[int]
+		for id := range ids.all() {
+			shared = g.getNeighborSet(id)
+			break
+		}
+		for id := range ids.all() {
+			neighbors := g.getNeighborSet(id)
+			shared = intersection(shared, neighbors)
+		}
+		if shared.size() == 0 {
+			if !yield(ids) {
+				return
+			}
+		}
+	Outer:
+		for id := range shared.all() {
+			newClique := ids.clone()
+			newClique.add(id)
+			for clique := range g.expandClique(newClique) {
+				if !yield(clique) {
+					break Outer
+				}
+			}
+		}
 	}
-	for id := range ids.all() {
-		neighbors := g.getNeighborSet(id)
-		shared = intersection(shared, neighbors)
-	}
-	if shared.size() == 0 {
-		return []set[int]{ids}
-	}
-	newCliques := []set[int]{}
-	for id := range shared.all() {
-		newClique := ids.clone()
-		newClique.add(id)
-		newCliques = append(newCliques, g.expandClique(newClique)...)
-	}
-	return newCliques
 }
 
 func (g *graph[T]) allCliques() iter.Seq[set[int]] {
@@ -146,7 +152,7 @@ func (g *graph[T]) allCliques() iter.Seq[set[int]] {
 			start := newSet[int]()
 			start.add(id)
 			cliques := g.expandClique(start)
-			for _, clique := range cliques {
+			for clique := range cliques {
 				if !yield(clique) {
 					break
 				}
@@ -196,23 +202,25 @@ func CountLANs(inputs []string) int {
 	return cliques.size()
 }
 
+func getCliquePassword(g *graph[string], clique set[int]) string {
+	names := []string{}
+	for id := range clique.all() {
+		names = append(names, g.getNode(id))
+	}
+	slices.Sort(names)
+	return strings.Join(names, ",")
+}
+
 func FindPassword(inputs []string) string {
 	var maxClique set[int]
 	maxCliqueSize := 0
 	g := parseGraph(inputs)
 	for clique := range g.allCliques() {
 		cliqueSize := clique.size()
-		log.Printf("Found clique with size %d", cliqueSize)
 		if cliqueSize > maxCliqueSize {
 			maxClique = clique
 			maxCliqueSize = cliqueSize
-			log.Printf("Found larger clique with size %d", maxCliqueSize)
 		}
 	}
-	names := []string{}
-	for id := range maxClique.all() {
-		names = append(names, g.getNode(id))
-	}
-	slices.Sort(names)
-	return strings.Join(names, ",")
+	return getCliquePassword(g, maxClique)
 }
