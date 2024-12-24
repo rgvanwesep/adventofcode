@@ -6,11 +6,6 @@ import (
 	"strings"
 )
 
-const (
-	maxUint = ^uint(0)
-	maxInt  = int(maxUint >> 1)
-)
-
 type set[T comparable] struct {
 	values map[T]bool
 }
@@ -23,10 +18,6 @@ func newSet[T comparable]() set[T] {
 
 func (s *set[T]) add(v T) {
 	s.values[v] = true
-}
-
-func (s *set[T]) remove(v T) {
-	delete(s.values, v)
 }
 
 func (s *set[T]) contains(v T) bool {
