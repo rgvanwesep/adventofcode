@@ -47,10 +47,18 @@ func (s *set[T]) clone() set[T] {
 	return newSet
 }
 
-func intersection[T comparable](s1, s2 set[T]) set[T] {
+func intersection[T comparable](ss ...set[T]) set[T] {
 	s := newSet[T]()
+	s1 := ss[0]
 	for i := range s1.all() {
-		if s2.contains(i) {
+		allContains := true
+		for _, s2 := range ss[1:] {
+			if !s2.contains(i) {
+				allContains = false
+				break
+			}
+		}
+		if allContains {
 			s.add(i)
 		}
 	}
@@ -110,15 +118,12 @@ func (g *graph[T]) allNodes() iter.Seq2[int, T] {
 
 func (g *graph[T]) expandClique(ids set[int]) iter.Seq[set[int]] {
 	return func(yield func(set[int]) bool) {
-		var shared set[int]
-		for id := range ids.all() {
-			shared = g.getNeighborSet(id)
-			break
-		}
+		neighborSets := []set[int]{}
 		for id := range ids.all() {
 			neighbors := g.getNeighborSet(id)
-			shared = intersection(shared, neighbors)
+			neighborSets = append(neighborSets, neighbors)
 		}
+		shared := intersection(neighborSets...)
 		if shared.size() == 0 {
 			if !yield(ids) {
 				return
