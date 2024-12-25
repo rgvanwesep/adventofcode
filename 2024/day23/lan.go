@@ -2,6 +2,7 @@ package day23
 
 import (
 	"iter"
+	"log"
 	"slices"
 	"strings"
 )
@@ -73,6 +74,7 @@ type connection struct {
 type graph[T any] struct {
 	nodes        []T
 	adjacencies  [][]connection
+	nEdges int
 	neighborSets []set[int]
 }
 
@@ -98,6 +100,7 @@ func (g *graph[T]) addNode(n T) int {
 }
 
 func (g *graph[T]) addEdge(id int, conn connection) {
+	g.nEdges++
 	g.adjacencies[id] = append(g.adjacencies[id], conn)
 	g.neighborSets[id].add(conn.nodeId)
 }
@@ -157,6 +160,26 @@ func (g *graph[T]) allCliques() iter.Seq[set[int]] {
 	}
 }
 
+func (g *graph[T]) getInducedSubgraph(ids set[int]) *graph[T] {
+	induced := newGraph[T]()
+	inducedToParent := map[int]int{}
+	parentToInduced := map[int]int{}
+	for id := range ids.all() {
+		inducedId := induced.addNode(g.nodes[id])
+		inducedToParent[inducedId] = id
+	}
+	for id := range induced.allNodes() {
+		parentId := inducedToParent[id]
+		neighbors := g.getNeighborSet(parentId)
+		for n := range neighbors.all() {
+			if ids.contains(n) {
+				induced.addEdge(id, connection{parentToInduced[n], 1})
+			}
+		}
+	}
+	return induced
+}
+
 func parseGraph(inputs []string) *graph[string] {
 	g := newGraph[string]()
 	nodeIds := map[string]int{}
@@ -211,6 +234,14 @@ func FindPassword(inputs []string) string {
 	var maxClique set[int]
 	maxCliqueSize := 0
 	g := parseGraph(inputs)
+	inducedSubgraphs := map[string]*graph[string]{}
+	for id := range g.allNodes() {
+		ids := g.getNeighborSet(id)
+		ids.add(id)
+		induced := g.getInducedSubgraph(ids)
+		inducedSubgraphs[getCliquePassword(induced, ids)] = induced
+	}
+	log.Printf("Found %d induced subgraphs", len(inducedSubgraphs))
 	for clique := range g.allCliques() {
 		cliqueSize := clique.size()
 		if cliqueSize > maxCliqueSize {
