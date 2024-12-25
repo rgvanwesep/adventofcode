@@ -1,6 +1,7 @@
 package day23
 
 import (
+	"fmt"
 	"iter"
 	"log"
 	"slices"
@@ -19,6 +20,10 @@ func newSet[T comparable]() set[T] {
 
 func (s *set[T]) add(v T) {
 	s.values[v] = true
+}
+
+func (s *set[T]) remove(v T) {
+	delete(s.values, v)
 }
 
 func (s *set[T]) contains(v T) bool {
@@ -71,18 +76,22 @@ type connection struct {
 	edgeWeight int
 }
 
-type graph[T any] struct {
+type graph[T comparable] struct {
 	nodes        []T
 	adjacencies  [][]connection
-	nEdges int
+	nEdges       int
 	neighborSets []set[int]
+	nodeIds      map[T]int
+	edgeSet      set[[2]int]
 }
 
-func newGraph[T any]() *graph[T] {
+func newGraph[T comparable]() *graph[T] {
 	return &graph[T]{
 		nodes:        []T{},
 		adjacencies:  [][]connection{},
 		neighborSets: []set[int]{},
+		nodeIds:      map[T]int{},
+		edgeSet:      set[[2]int]{},
 	}
 }
 
@@ -91,6 +100,9 @@ func (g *graph[T]) getNode(id int) T {
 }
 
 func (g *graph[T]) addNode(n T) int {
+	if id, ok := g.nodeIds[n]; ok {
+		return id
+	}
 	id := len(g.nodes)
 	g.nodes = append(g.nodes, n)
 	g.adjacencies = append(g.adjacencies, []connection{})
@@ -100,6 +112,9 @@ func (g *graph[T]) addNode(n T) int {
 }
 
 func (g *graph[T]) addEdge(id int, conn connection) {
+	if g.edgeSet.contains([2]int{id, conn.nodeId}) {
+		return
+	}
 	g.nEdges++
 	g.adjacencies[id] = append(g.adjacencies[id], conn)
 	g.neighborSets[id].add(conn.nodeId)
@@ -167,12 +182,13 @@ func (g *graph[T]) getInducedSubgraph(ids set[int]) *graph[T] {
 	for id := range ids.all() {
 		inducedId := induced.addNode(g.nodes[id])
 		inducedToParent[inducedId] = id
+		parentToInduced[id] = inducedId
 	}
 	for id := range induced.allNodes() {
 		parentId := inducedToParent[id]
 		neighbors := g.getNeighborSet(parentId)
 		for n := range neighbors.all() {
-			if ids.contains(n) {
+			if id != parentToInduced[n] && ids.contains(n) {
 				induced.addEdge(id, connection{parentToInduced[n], 1})
 			}
 		}
@@ -238,10 +254,24 @@ func FindPassword(inputs []string) string {
 	for id := range g.allNodes() {
 		ids := g.getNeighborSet(id)
 		ids.add(id)
-		induced := g.getInducedSubgraph(ids)
-		inducedSubgraphs[getCliquePassword(induced, ids)] = induced
+		for rid := range ids.all() {
+			reduced := ids.clone()
+			reduced.remove(rid)
+			induced := g.getInducedSubgraph(reduced)
+			inducedIds := newSet[int]()
+			for i := range induced.allNodes() {
+				inducedIds.add(i)
+			}
+			inducedSubgraphs[getCliquePassword(induced, inducedIds)] = induced
+		}
+
 	}
 	log.Printf("Found %d induced subgraphs", len(inducedSubgraphs))
+	for k, v := range inducedSubgraphs {
+		if v.nEdges == len(v.nodes)*(len(v.nodes)-1) {
+			fmt.Printf("Subgraph %q has %d edges\n", k, v.nEdges)
+		}
+	}
 	for clique := range g.allCliques() {
 		cliqueSize := clique.size()
 		if cliqueSize > maxCliqueSize {
