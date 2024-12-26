@@ -146,16 +146,14 @@ func computeResult(wires map[string]chan bool, initialValues []initialValue) int
 		}
 		bitCount++
 	}
-	for _, wire := range wires {
-		close(wire)
-	}
 	return result
 }
 
 func Evaluate(inputs []string) int {
 	initialValues, gates := parseInputs(inputs)
 	wires := startGates(gates)
-	return computeResult(wires, initialValues)
+	result := computeResult(wires, initialValues)
+	return result
 }
 
 func generateInitalValues(x, y, nBits int) []initialValue {
