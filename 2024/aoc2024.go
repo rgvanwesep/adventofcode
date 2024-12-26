@@ -164,6 +164,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day23.FindPassword(inputLines)))
 	case [2]int{24, 1}:
 		writer.WriteString(fmt.Sprintln(day24.Evaluate(inputLines)))
+	case [2]int{24, 2}:
+		writer.WriteString(fmt.Sprintln(day24.FindSwapped(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}

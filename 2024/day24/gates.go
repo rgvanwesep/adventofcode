@@ -2,6 +2,7 @@ package day24
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 )
 
@@ -13,6 +14,13 @@ const (
 type initialValue struct {
 	name  string
 	value bool
+}
+
+func (v initialValue) String() string {
+	if v.value {
+		return fmt.Sprintf("%s: 1", v.name)
+	}
+	return fmt.Sprintf("%s: 0", v.name)
 }
 
 type gate struct {
@@ -148,4 +156,41 @@ func Evaluate(inputs []string) int {
 	initialValues, gates := parseInputs(inputs)
 	channels := startGates(gates)
 	return computeResult(channels, initialValues)
+}
+
+func generateInitalValues(x, y, nBits int) []initialValue {
+	initialValues := []initialValue{}
+	for i := range nBits {
+		initialValues = append(initialValues,
+			initialValue{
+				name:  fmt.Sprintf("x%02d", i),
+				value: x&(1<<i) != 0,
+			},
+			initialValue{
+				name:  fmt.Sprintf("y%02d", i),
+				value: y&(1<<i) != 0,
+			},
+		)
+	}
+	return initialValues
+}
+
+func FindSwapped(inputs []string) string {
+	initialValues, gates := parseInputs(inputs)
+	nBits := len(initialValues) / 2
+	for i := range nBits {
+		for cx := range 2 {
+			for cy := range 2 {
+				x := cx << i
+				y := cy << i
+				initialValues = generateInitalValues(x, y, nBits)
+				channels := startGates(gates)
+				z := computeResult(channels, initialValues)
+				if z-(x+y) != 0 {
+					log.Printf("Result incorrect\n   %045b\n + %045b\n!= %045b", x, y, z)
+				}
+			}
+		}
+	}
+	return ""
 }
