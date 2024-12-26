@@ -90,12 +90,11 @@ func xor(inputA, inputB chan bool, output chan<- bool) {
 	output <- a != b
 }
 
-func Evaluate(inputs []string) int {
+func startGates(gates []gate) map[string]chan bool {
 	var (
 		inputA, inputB, output chan bool
 		ok                     bool
 	)
-	initialValues, gates := parseInputs(inputs)
 	channels := map[string]chan bool{}
 	for _, gate := range gates {
 		if inputA, ok = channels[gate.inputA]; !ok {
@@ -119,6 +118,10 @@ func Evaluate(inputs []string) int {
 			go xor(inputA, inputB, output)
 		}
 	}
+	return channels
+}
+
+func computeResult(channels map[string]chan bool, initialValues []initialValue) int {
 	for _, initialValue := range initialValues {
 		channels[initialValue.name] <- initialValue.value
 	}
@@ -139,4 +142,10 @@ func Evaluate(inputs []string) int {
 		close(ch)
 	}
 	return result
+}
+
+func Evaluate(inputs []string) int {
+	initialValues, gates := parseInputs(inputs)
+	channels := startGates(gates)
+	return computeResult(channels, initialValues)
 }
