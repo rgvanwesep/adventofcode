@@ -154,8 +154,8 @@ func computeResult(wires map[string]chan bool, initialValues []initialValue) int
 
 func Evaluate(inputs []string) int {
 	initialValues, gates := parseInputs(inputs)
-	channels := startGates(gates)
-	return computeResult(channels, initialValues)
+	wires := startGates(gates)
+	return computeResult(wires, initialValues)
 }
 
 func generateInitalValues(x, y, nBits int) []initialValue {
@@ -184,8 +184,8 @@ func FindSwapped(inputs []string) string {
 				x := cx << i
 				y := cy << i
 				initialValues = generateInitalValues(x, y, nBits)
-				channels := startGates(gates)
-				z := computeResult(channels, initialValues)
+				wires := startGates(gates)
+				z := computeResult(wires, initialValues)
 				if z-(x+y) != 0 {
 					log.Printf("Result incorrect\n   %045b\n + %045b\n!= %045b", x, y, z)
 				}
