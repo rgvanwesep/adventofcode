@@ -103,19 +103,19 @@ func startGates(gates []gate) map[string]chan bool {
 		inputA, inputB, output chan bool
 		ok                     bool
 	)
-	channels := map[string]chan bool{}
+	wires := map[string]chan bool{}
 	for _, gate := range gates {
-		if inputA, ok = channels[gate.inputA]; !ok {
+		if inputA, ok = wires[gate.inputA]; !ok {
 			inputA = make(chan bool, len(gates))
-			channels[gate.inputA] = inputA
+			wires[gate.inputA] = inputA
 		}
-		if inputB, ok = channels[gate.inputB]; !ok {
+		if inputB, ok = wires[gate.inputB]; !ok {
 			inputB = make(chan bool, len(gates))
-			channels[gate.inputB] = inputB
+			wires[gate.inputB] = inputB
 		}
-		if output, ok = channels[gate.output]; !ok {
+		if output, ok = wires[gate.output]; !ok {
 			output = make(chan bool, len(gates))
-			channels[gate.output] = output
+			wires[gate.output] = output
 		}
 		switch gate.operation {
 		case "AND":
@@ -126,28 +126,28 @@ func startGates(gates []gate) map[string]chan bool {
 			go xor(inputA, inputB, output)
 		}
 	}
-	return channels
+	return wires
 }
 
-func computeResult(channels map[string]chan bool, initialValues []initialValue) int {
+func computeResult(wires map[string]chan bool, initialValues []initialValue) int {
 	for _, initialValue := range initialValues {
-		channels[initialValue.name] <- initialValue.value
+		wires[initialValue.name] <- initialValue.value
 	}
 	result := 0
 	bitCount := 0
 	for {
 		name := fmt.Sprintf("z%02d", bitCount)
-		ch, ok := channels[name]
+		wire, ok := wires[name]
 		if !ok {
 			break
 		}
-		if <-ch {
+		if <-wire {
 			result ^= 1 << bitCount
 		}
 		bitCount++
 	}
-	for _, ch := range channels {
-		close(ch)
+	for _, wire := range wires {
+		close(wire)
 	}
 	return result
 }
