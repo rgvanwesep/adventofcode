@@ -18,6 +18,7 @@ import (
 	"aoc2024/day22"
 	"aoc2024/day23"
 	"aoc2024/day24"
+	"aoc2024/day25"
 	"aoc2024/day3"
 	"aoc2024/day4"
 	"aoc2024/day5"
@@ -166,6 +167,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day24.Evaluate(inputLines)))
 	case [2]int{24, 2}:
 		writer.WriteString(fmt.Sprintln(day24.FindSwapped(inputLines)))
+	case [2]int{25, 1}:
+		writer.WriteString(fmt.Sprintln(day25.CountFits(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
