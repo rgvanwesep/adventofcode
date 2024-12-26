@@ -176,6 +176,7 @@ func generateInitalValues(x, y, nBits int) []initialValue {
 func FindSwapped(inputs []string) string {
 	initialValues, gates := parseInputs(inputs)
 	nBits := len(initialValues) / 2
+	badWires := map[string]bool{}
 	for i := range nBits {
 		for cx := range 2 {
 			for cy := range 2 {
@@ -186,9 +187,28 @@ func FindSwapped(inputs []string) string {
 				z := computeResult(wires, initialValues)
 				if z-(x+y) != 0 {
 					log.Printf("Result incorrect\n   %045b\n + %045b\n!= %045b", x, y, z)
+					wires := startGates(gates)
+					for _, initialValue := range initialValues {
+						wires[initialValue.name] <- initialValue.value
+					}
+					for name, wire := range wires {
+						value := <-wire
+						wire <- value
+						if value {
+							log.Printf("Wire %q is on", name)
+							c := name[0]
+							if c != 'x' && c != 'y' {
+								badWires[name] = true
+							}
+						}
+					}
 				}
 			}
 		}
 	}
+	for name := range badWires {
+		log.Printf("Wire %q is bad", name)
+	}
+	log.Printf("There are %d bad wires", len(badWires))
 	return ""
 }
