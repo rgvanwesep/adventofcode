@@ -17,6 +17,7 @@ import (
 	"aoc2024/day21"
 	"aoc2024/day22"
 	"aoc2024/day23"
+	"aoc2024/day24"
 	"aoc2024/day3"
 	"aoc2024/day4"
 	"aoc2024/day5"
@@ -161,6 +162,8 @@ func main() {
 		writer.WriteString(fmt.Sprintln(day23.CountLANs(inputLines)))
 	case [2]int{23, 2}:
 		writer.WriteString(fmt.Sprintln(day23.FindPassword(inputLines)))
+	case [2]int{24, 1}:
+		writer.WriteString(fmt.Sprintln(day24.Evaluate(inputLines)))
 	default:
 		log.Fatal("Invalid day or part")
 	}
