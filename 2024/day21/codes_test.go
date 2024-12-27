@@ -30,60 +30,46 @@ func TestCalcComplexity(t *testing.T) {
 	}
 }
 
-func TestIsValidWithInput(t *testing.T) {
+func TestGetShortestSequenceLength(t *testing.T) {
 	cases := []struct {
-		input    byte
-		from, to string
-		expected bool
+		input               string
+		nDirectionalKeypads int
+		expected            int
 	}{
 		{
-			input:    '<',
-			from:     "AAA",
-			to:       "^AA",
-			expected: true,
+			input:               "029A",
+			nDirectionalKeypads: 3,
+			expected:            68,
 		},
 		{
-			input:    'v',
-			from:     "^AA",
-			to:       "vAA",
-			expected: true,
+			input:               "980A",
+			nDirectionalKeypads: 3,
+			expected:            60,
 		},
 		{
-			input:    'A',
-			from:     "vAA",
-			to:       "v>A",
-			expected: true,
+			input:               "179A",
+			nDirectionalKeypads: 3,
+			expected:            68,
 		},
 		{
-			input:    '<',
-			from:     "v>A",
-			to:       "<>A",
-			expected: true,
+			input:               "456A",
+			nDirectionalKeypads: 3,
+			expected:            64,
 		},
 		{
-			input:    'A',
-			from:     "<>A",
-			to:       "<vA",
-			expected: true,
-		},
-		{
-			input:    'A',
-			from:     "<vA",
-			to:       "<<A",
-			expected: true,
-		},
-		{
-			input:    '>',
-			from:     "<<A",
-			to:       "v<A",
-			expected: true,
+			input:               "379A",
+			nDirectionalKeypads: 3,
+			expected:            64,
 		},
 	}
 	for _, c := range cases {
-		result := isValidWithInput(c.input, c.from, c.to)
+		result := getShortestSequenceLength(c.input, c.nDirectionalKeypads)
 		if result != c.expected {
-			t.Errorf("isValidWithInput(%q, %q, %q) == %t, expected %t",
-				c.input, c.from, c.to, result, c.expected,
+			t.Errorf("getShortestSequenceLength(%q, %d) == %d, expected %d",
+				c.input,
+				c.nDirectionalKeypads,
+				result,
+				c.expected,
 			)
 		}
 	}
