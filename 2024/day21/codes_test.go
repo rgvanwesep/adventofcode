@@ -17,6 +17,16 @@ func TestCalcComplexity(t *testing.T) {
 			},
 			expected: 126384,
 		},
+		{
+			inputs: []string{
+				"789A",
+				"968A",
+				"286A",
+				"349A",
+				"170A",
+			},
+			expected: 176650,
+		},
 	}
 	for _, c := range cases {
 		result := CalcComplexity(c.inputs)

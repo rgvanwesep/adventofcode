@@ -3,8 +3,34 @@ package day21
 import (
 	"iter"
 	"log"
+	"slices"
 	"strconv"
 )
+
+const (
+	maxUint = ^uint(0)
+	maxInt  = int(maxUint >> 1)
+)
+
+type stack[T any] struct {
+	size   int
+	values []T
+}
+
+func (s *stack[T]) push(value T) {
+	s.size++
+	s.values = append(s.values, value)
+}
+
+func (s *stack[T]) pop() (value T, ok bool) {
+	ok = s.size > 0
+	if ok {
+		s.size--
+		value = s.values[s.size]
+		s.values = s.values[:s.size]
+	}
+	return
+}
 
 func getNumericPart(input string) int {
 	inputBytes := []byte(input)
@@ -112,44 +138,85 @@ func newNumericKeyPad() numericKeyPad {
 	return numericKeyPad{layout, keyMap}
 }
 
-func (k numericKeyPad) getDirectionalSequence(from, to byte) string {
-	seq := []byte{}
-	fromVec := k.keyMap[from]
-	toVec := k.keyMap[to]
-	xDiff := toVec.x - fromVec.x
-	yDiff := toVec.y - fromVec.y
-	switch {
-	case xDiff < 0 && yDiff < 0:
-		for range -yDiff {
-			seq = append(seq, '^')
-		}
-		for range -xDiff {
-			seq = append(seq, '<')
-		}
-	case xDiff < 0 && yDiff >= 0:
-		for range yDiff {
-			seq = append(seq, 'v')
-		}
-		for range -xDiff {
-			seq = append(seq, '<')
-		}
-	case xDiff >= 0 && yDiff < 0:
-		for range -yDiff {
-			seq = append(seq, '^')
-		}
-		for range xDiff {
-			seq = append(seq, '>')
-		}
-	case xDiff >= 0 && yDiff >= 0:
-		for range yDiff {
-			seq = append(seq, 'v')
-		}
-		for range xDiff {
-			seq = append(seq, '>')
+func (k numericKeyPad) getDirectionalSequences(from, to byte) []string {
+	finalSeqs := []string{}
+	seqs := new(stack[struct {
+		from, to byte
+		seq      []byte
+	}])
+	seqs.push(struct {
+		from byte
+		to   byte
+		seq  []byte
+	}{from, to, []byte{}})
+	for {
+		if current, ok := seqs.pop(); ok {
+			seq := current.seq
+			from := current.from
+			to := current.to
+			if from == to {
+				finalSeqs = append(finalSeqs, string(append(seq, 'A')))
+				continue
+			}
+			fromVec := k.keyMap[from]
+			toVec := k.keyMap[to]
+			xDiff := toVec.x - fromVec.x
+			yDiff := toVec.y - fromVec.y
+			if xDiff < 0 {
+				if newFrom, ok := k.layout.get(vector{fromVec.x - 1, fromVec.y}); ok && newFrom != 0 {
+					seqs.push(struct {
+						from byte
+						to   byte
+						seq  []byte
+					}{
+						from: newFrom,
+						to:   to,
+						seq:  append(slices.Clone(seq), '<'),
+					})
+				}
+			} else if xDiff > 0 {
+				if newFrom, ok := k.layout.get(vector{fromVec.x + 1, fromVec.y}); ok && newFrom != 0 {
+					seqs.push(struct {
+						from byte
+						to   byte
+						seq  []byte
+					}{
+						from: newFrom,
+						to:   to,
+						seq:  append(slices.Clone(seq), '>'),
+					})
+				}
+			}
+			if yDiff < 0 {
+				if newFrom, ok := k.layout.get(vector{fromVec.x, fromVec.y - 1}); ok && newFrom != 0 {
+					seqs.push(struct {
+						from byte
+						to   byte
+						seq  []byte
+					}{
+						from: newFrom,
+						to:   to,
+						seq:  append(slices.Clone(seq), '^'),
+					})
+				}
+			} else if yDiff > 0 {
+				if newFrom, ok := k.layout.get(vector{fromVec.x, fromVec.y + 1}); ok && newFrom != 0 {
+					seqs.push(struct {
+						from byte
+						to   byte
+						seq  []byte
+					}{
+						from: newFrom,
+						to:   to,
+						seq:  append(slices.Clone(seq), 'v'),
+					})
+				}
+			}
+		} else {
+			break
 		}
 	}
-	seq = append(seq, 'A')
-	return string(seq)
+	return finalSeqs
 }
 
 type directionalKeyPad struct {
@@ -288,22 +355,29 @@ func getShortestSequenceLength(input string, nDirectionalKeypads int) int {
 		}
 	}
 
-	sum := 0
+	finalSum := 0
 	var fromNumeric byte = 'A'
 	for i := range input {
+		minSum := maxInt
 		toNumeric := input[i]
-		initialDirectionalSequence := numericKeyPad.getDirectionalSequence(fromNumeric, toNumeric)
-		var fromDirectional byte = 'A'
-		for j := range initialDirectionalSequence {
-			toDirectional := initialDirectionalSequence[j]
-			directionalSequence := directionalKeyPad.getDirectionalSequence(fromDirectional, toDirectional)
-			index := directionalKeyPad.directionalSequences[directionalSequence]
-			sum += shortestSequenceLengths[depth-1][index]
-			fromDirectional = toDirectional
+		for _, initialDirectionalSequence := range numericKeyPad.getDirectionalSequences(fromNumeric, toNumeric) {
+			sum := 0
+			var fromDirectional byte = 'A'
+			for j := range initialDirectionalSequence {
+				toDirectional := initialDirectionalSequence[j]
+				directionalSequence := directionalKeyPad.getDirectionalSequence(fromDirectional, toDirectional)
+				index := directionalKeyPad.directionalSequences[directionalSequence]
+				sum += shortestSequenceLengths[depth-1][index]
+				fromDirectional = toDirectional
+			}
+			if sum < minSum {
+				minSum = sum
+			}
+			fromNumeric = toNumeric
 		}
-		fromNumeric = toNumeric
+		finalSum += minSum
 	}
-	return sum
+	return finalSum
 }
 
 func CalcComplexity(inputs []string) int {
