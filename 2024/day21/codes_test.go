@@ -4,8 +4,9 @@ import "testing"
 
 func TestCalcComplexity(t *testing.T) {
 	cases := []struct {
-		inputs   []string
-		expected int
+		inputs              []string
+		nDirectionalKeypads int
+		expected            int
 	}{
 		{
 			inputs: []string{
@@ -15,7 +16,8 @@ func TestCalcComplexity(t *testing.T) {
 				"456A",
 				"379A",
 			},
-			expected: 126384,
+			nDirectionalKeypads: 3,
+			expected:            126384,
 		},
 		{
 			inputs: []string{
@@ -25,14 +27,16 @@ func TestCalcComplexity(t *testing.T) {
 				"349A",
 				"170A",
 			},
-			expected: 176650,
+			nDirectionalKeypads: 3,
+			expected:            176650,
 		},
 	}
 	for _, c := range cases {
-		result := CalcComplexity(c.inputs)
+		result := CalcComplexity(c.inputs, c.nDirectionalKeypads)
 		if result != c.expected {
-			t.Errorf("CalcComplexity(%q) == %d, expected %d",
+			t.Errorf("CalcComplexity(%q, %d) == %d, expected %d",
 				c.inputs,
+				c.nDirectionalKeypads,
 				result,
 				c.expected,
 			)

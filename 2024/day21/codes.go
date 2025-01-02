@@ -380,10 +380,10 @@ func getShortestSequenceLength(input string, nDirectionalKeypads int) int {
 	return finalSum
 }
 
-func CalcComplexity(inputs []string) int {
+func CalcComplexity(inputs []string, nDirectionalKeypads int) int {
 	sum := 0
 	for _, input := range inputs {
-		sum += getNumericPart(input) * getShortestSequenceLength(input, 3)
+		sum += getNumericPart(input) * getShortestSequenceLength(input, nDirectionalKeypads)
 	}
 	return sum
 }
