@@ -95,50 +95,12 @@ func (g grid) String() string {
 	return string(s)
 }
 
-type numericKeyPad struct {
+type keyPad struct {
 	layout *grid
 	keyMap map[byte]vector
 }
 
-/*
- * +---+---+---+
- * | 7 | 8 | 9 |
- * +---+---+---+
- * | 4 | 5 | 6 |
- * +---+---+---+
- * | 1 | 2 | 3 |
- * +---+---+---+
- *     | 0 | A |
- *     +---+---+
- */
-func newNumericKeyPad() numericKeyPad {
-	layout := newGrid(4, 3)
-
-	layout.set(vector{0, 0}, '7')
-	layout.set(vector{1, 0}, '8')
-	layout.set(vector{2, 0}, '9')
-
-	layout.set(vector{0, 1}, '4')
-	layout.set(vector{1, 1}, '5')
-	layout.set(vector{2, 1}, '6')
-
-	layout.set(vector{0, 2}, '1')
-	layout.set(vector{1, 2}, '2')
-	layout.set(vector{2, 2}, '3')
-
-	layout.set(vector{0, 3}, 0)
-	layout.set(vector{1, 3}, '0')
-	layout.set(vector{2, 3}, 'A')
-
-	keyMap := map[byte]vector{}
-	for v, c := range layout.all() {
-		keyMap[c] = v
-	}
-
-	return numericKeyPad{layout, keyMap}
-}
-
-func (k numericKeyPad) getDirectionalSequences(from, to byte) []string {
+func (k keyPad) getDirectionalSequences(from, to byte) []string {
 	finalSeqs := []string{}
 	seqs := new(stack[struct {
 		from, to byte
@@ -219,11 +181,55 @@ func (k numericKeyPad) getDirectionalSequences(from, to byte) []string {
 	return finalSeqs
 }
 
+type numericKeyPad struct {
+	keyPad
+}
+
+/*
+ * +---+---+---+
+ * | 7 | 8 | 9 |
+ * +---+---+---+
+ * | 4 | 5 | 6 |
+ * +---+---+---+
+ * | 1 | 2 | 3 |
+ * +---+---+---+
+ *     | 0 | A |
+ *     +---+---+
+ */
+func newNumericKeyPad() numericKeyPad {
+	layout := newGrid(4, 3)
+
+	layout.set(vector{0, 0}, '7')
+	layout.set(vector{1, 0}, '8')
+	layout.set(vector{2, 0}, '9')
+
+	layout.set(vector{0, 1}, '4')
+	layout.set(vector{1, 1}, '5')
+	layout.set(vector{2, 1}, '6')
+
+	layout.set(vector{0, 2}, '1')
+	layout.set(vector{1, 2}, '2')
+	layout.set(vector{2, 2}, '3')
+
+	layout.set(vector{0, 3}, 0)
+	layout.set(vector{1, 3}, '0')
+	layout.set(vector{2, 3}, 'A')
+
+	keyMap := map[byte]vector{}
+	for v, c := range layout.all() {
+		keyMap[c] = v
+	}
+
+	k := new(numericKeyPad)
+	k.layout = layout
+	k.keyMap = keyMap
+	return *k
+}
+
 type directionalKeyPad struct {
-	layout               *grid
-	keyMap               map[byte]vector
+	keyPad
 	directionalSequences map[string]int
-	expansionMap         [][]int
+	expansionMap         [][][]int
 }
 
 /*
@@ -249,53 +255,12 @@ func newDirectionalKeyPad() directionalKeyPad {
 		keyMap[c] = v
 	}
 
-	keyPad := directionalKeyPad{
-		layout: layout,
-		keyMap: keyMap,
-	}
-	keyPad.setDirectionalSequences()
-	keyPad.setExpansionMap()
-	return keyPad
-}
-
-func (k directionalKeyPad) getDirectionalSequence(from, to byte) string {
-	seq := []byte{}
-	fromVec := k.keyMap[from]
-	toVec := k.keyMap[to]
-	xDiff := toVec.x - fromVec.x
-	yDiff := toVec.y - fromVec.y
-	switch {
-	case xDiff < 0 && yDiff < 0:
-		for range -yDiff {
-			seq = append(seq, '^')
-		}
-		for range -xDiff {
-			seq = append(seq, '<')
-		}
-	case xDiff < 0 && yDiff >= 0:
-		for range yDiff {
-			seq = append(seq, 'v')
-		}
-		for range -xDiff {
-			seq = append(seq, '<')
-		}
-	case xDiff >= 0 && yDiff < 0:
-		for range xDiff {
-			seq = append(seq, '>')
-		}
-		for range -yDiff {
-			seq = append(seq, '^')
-		}
-	case xDiff >= 0 && yDiff >= 0:
-		for range xDiff {
-			seq = append(seq, '>')
-		}
-		for range yDiff {
-			seq = append(seq, 'v')
-		}
-	}
-	seq = append(seq, 'A')
-	return string(seq)
+	k := new(directionalKeyPad)
+	k.layout = layout
+	k.keyMap = keyMap
+	k.setDirectionalSequences()
+	k.setExpansionMap()
+	return *k
 }
 
 func (k *directionalKeyPad) setDirectionalSequences() {
@@ -309,9 +274,11 @@ func (k *directionalKeyPad) setDirectionalSequences() {
 					for yj := range k.layout.nrows {
 						vj := vector{xj, yj}
 						if cj, _ := k.layout.get(vj); cj != 0 {
-							if _, ok := k.directionalSequences[k.getDirectionalSequence(ci, cj)]; !ok {
-								k.directionalSequences[k.getDirectionalSequence(ci, cj)] = index
-								index++
+							for _, seq := range k.getDirectionalSequences(ci, cj) {
+								if _, ok := k.directionalSequences[seq]; !ok {
+									k.directionalSequences[seq] = index
+									index++
+								}
 							}
 						}
 					}
@@ -322,16 +289,56 @@ func (k *directionalKeyPad) setDirectionalSequences() {
 }
 
 func (k *directionalKeyPad) setExpansionMap() {
-	k.expansionMap = make([][]int, len(k.directionalSequences))
+	k.expansionMap = make([][][]int, len(k.directionalSequences))
 	for directionalSequence, i := range k.directionalSequences {
-		k.expansionMap[i] = []int{}
+		k.expansionMap[i] = [][]int{}
+		s := new(stack[struct {
+			index    int
+			from, to byte
+			indices  []int
+		}])
 		var from byte = 'A'
-		for j := range directionalSequence {
-			to := directionalSequence[j]
-			d := k.getDirectionalSequence(from, to)
-			l := k.directionalSequences[d]
-			k.expansionMap[i] = append(k.expansionMap[i], l)
-			from = to
+		to := directionalSequence[0]
+		for _, seq := range k.getDirectionalSequences(from, to) {
+			l := k.directionalSequences[seq]
+			s.push(struct {
+				index   int
+				from    byte
+				to      byte
+				indices []int
+			}{
+				0,
+				from,
+				to,
+				[]int{l},
+			})
+		}
+		for {
+			if current, ok := s.pop(); ok {
+				if current.index < len(directionalSequence)-1 {
+					index := current.index + 1
+					from := current.to
+					to := directionalSequence[index]
+					for _, seq := range k.getDirectionalSequences(from, to) {
+						l := k.directionalSequences[seq]
+						s.push(struct {
+							index   int
+							from    byte
+							to      byte
+							indices []int
+						}{
+							index,
+							from,
+							to,
+							append(slices.Clone(current.indices), l),
+						})
+					}
+				} else {
+					k.expansionMap[i] = append(k.expansionMap[i], current.indices)
+				}
+			} else {
+				break
+			}
 		}
 	}
 }
@@ -349,9 +356,17 @@ func getShortestSequenceLength(input string, nDirectionalKeypads int) int {
 	for i := 1; i < depth; i++ {
 		shortestSequenceLengths[i] = make([]int, len(directionalKeyPad.directionalSequences))
 		for j := range shortestSequenceLengths[i] {
-			for _, k := range directionalKeyPad.expansionMap[j] {
-				shortestSequenceLengths[i][j] += shortestSequenceLengths[i-1][k]
+			minSum := maxInt
+			for _, ks := range directionalKeyPad.expansionMap[j] {
+				sum := 0
+				for _, k := range ks {
+					sum += shortestSequenceLengths[i-1][k]
+				}
+				if sum < minSum {
+					minSum = sum
+				}
 			}
+			shortestSequenceLengths[i][j] = minSum
 		}
 	}
 
@@ -361,21 +376,58 @@ func getShortestSequenceLength(input string, nDirectionalKeypads int) int {
 		minSum := maxInt
 		toNumeric := input[i]
 		for _, initialDirectionalSequence := range numericKeyPad.getDirectionalSequences(fromNumeric, toNumeric) {
-			sum := 0
+			index := 0
 			var fromDirectional byte = 'A'
-			for j := range initialDirectionalSequence {
-				toDirectional := initialDirectionalSequence[j]
-				directionalSequence := directionalKeyPad.getDirectionalSequence(fromDirectional, toDirectional)
-				index := directionalKeyPad.directionalSequences[directionalSequence]
-				sum += shortestSequenceLengths[depth-1][index]
-				fromDirectional = toDirectional
+			toDirectional := initialDirectionalSequence[index]
+			s := new(stack[struct {
+				index    int
+				from, to byte
+				sum      int
+			}])
+			for _, directionalSequence := range directionalKeyPad.getDirectionalSequences(fromDirectional, toDirectional) {
+				s.push(struct {
+					index int
+					from  byte
+					to    byte
+					sum   int
+				}{
+					index,
+					fromDirectional,
+					toDirectional,
+					shortestSequenceLengths[depth-1][directionalKeyPad.directionalSequences[directionalSequence]],
+				})
 			}
-			if sum < minSum {
-				minSum = sum
+			for {
+				if current, ok := s.pop(); ok {
+					if current.index < len(initialDirectionalSequence)-1 {
+						index := current.index + 1
+						from := current.to
+						to := initialDirectionalSequence[index]
+						for _, directionalSequence := range directionalKeyPad.getDirectionalSequences(from, to) {
+							s.push(struct {
+								index int
+								from  byte
+								to    byte
+								sum   int
+							}{
+								index,
+								from,
+								to,
+								current.sum + shortestSequenceLengths[depth-1][directionalKeyPad.directionalSequences[directionalSequence]],
+							})
+						}
+					} else {
+						if current.sum < minSum {
+							minSum = current.sum
+						}
+					}
+				} else {
+					break
+				}
 			}
-			fromNumeric = toNumeric
 		}
 		finalSum += minSum
+		fromNumeric, toNumeric = toNumeric, fromNumeric
 	}
 	return finalSum
 }

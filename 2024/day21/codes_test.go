@@ -52,6 +52,11 @@ func TestGetShortestSequenceLength(t *testing.T) {
 	}{
 		{
 			input:               "029A",
+			nDirectionalKeypads: 2,
+			expected:            28,
+		},
+		{
+			input:               "029A",
 			nDirectionalKeypads: 3,
 			expected:            68,
 		},
