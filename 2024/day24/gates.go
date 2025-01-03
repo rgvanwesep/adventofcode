@@ -1,6 +1,7 @@
 package day24
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,29 +12,79 @@ const (
 	gatePattern         = `^([a-z][0-9a-z]{2}) ((AND)|(OR)|(XOR)) ([a-z][0-9a-z]{2}) -> ([a-z][0-9a-z]{2})$`
 )
 
-type wire chan bool
-
-func newWire() wire {
-	return make(wire, 300)
+type wire struct {
+	value []bool
 }
 
-func (w wire) send(value bool) {
-	w <- value
+func newWire() *wire {
+	return &wire{
+		value: make([]bool, 0, 1),
+	}
 }
 
-func (w wire) recv() (value bool, ok bool) {
-	value, ok = <-w
+func (w *wire) send(value bool) {
+	if len(w.value) == 0 {
+		w.value = append(w.value, value)
+	} else {
+		w.value[0] = value
+	}
+}
+
+func (w *wire) recv() (value bool, ok bool) {
+	if len(w.value) == 1 {
+		value = w.value[0]
+		ok = true
+	}
 	return
 }
 
-type executor struct {}
+func (w *wire) hasValue() bool {
+	return len(w.value) == 1
+}
+
+type executor struct {
+	gates []struct {
+		gate                   func(*wire, *wire, *wire)
+		inputA, inputB, output *wire
+	}
+}
 
 func newExecutor() *executor {
 	return new(executor)
 }
 
-func (e *executor) exec(f func(wire, wire, wire), inputA, inputB, output wire) {
-	go f(inputA, inputB, output)
+func (e *executor) exec(f func(*wire, *wire, *wire), inputA, inputB, output *wire) {
+	e.gates = append(e.gates, struct {
+		gate   func(*wire, *wire, *wire)
+		inputA *wire
+		inputB *wire
+		output *wire
+	}{
+		f,
+		inputA,
+		inputB,
+		output,
+	})
+}
+
+func (e *executor) loop() error {
+	remaining := len(e.gates)
+	for {
+		remainingStart := remaining
+		for _, gate := range e.gates {
+			if !gate.output.hasValue() && gate.inputA.hasValue() && gate.inputB.hasValue() {
+				gate.gate(gate.inputA, gate.inputB, gate.output)
+				remaining--
+			}
+		}
+		if remaining == 0 {
+			break
+		}
+		if remaining == remainingStart {
+			return errors.New("deadlock")
+		}
+	}
+	return nil
 }
 
 type initialValue struct {
@@ -84,12 +135,12 @@ func parseInputs(inputs []string) ([]initialValue, []gate) {
 	return initialValues, gates
 }
 
-func and(inputA, inputB, output wire) {
+func and(inputA, inputB, output *wire) {
 	var a, b, ok bool
 	if a, ok = inputA.recv(); !ok {
 		return
 	}
-	inputA <- a
+	inputA.send(a)
 	if b, ok = inputB.recv(); !ok {
 		return
 	}
@@ -97,12 +148,12 @@ func and(inputA, inputB, output wire) {
 	output.send(a && b)
 }
 
-func or(inputA, inputB, output wire) {
+func or(inputA, inputB, output *wire) {
 	var a, b, ok bool
 	if a, ok = inputA.recv(); !ok {
 		return
 	}
-	inputA <- a
+	inputA.send(a)
 	if b, ok = inputB.recv(); !ok {
 		return
 	}
@@ -110,12 +161,12 @@ func or(inputA, inputB, output wire) {
 	output.send(a || b)
 }
 
-func xor(inputA, inputB, output wire) {
+func xor(inputA, inputB, output *wire) {
 	var a, b, ok bool
 	if a, ok = inputA.recv(); !ok {
 		return
 	}
-	inputA <- a
+	inputA.send(a)
 	if b, ok = inputB.recv(); !ok {
 		return
 	}
@@ -123,12 +174,12 @@ func xor(inputA, inputB, output wire) {
 	output.send(a != b)
 }
 
-func startGates(gates []gate) map[string]wire {
+func startGates(gates []gate) (map[string]*wire, *executor) {
 	var (
-		inputA, inputB, output wire
+		inputA, inputB, output *wire
 		ok                     bool
 	)
-	wires := map[string]wire{}
+	wires := map[string]*wire{}
 	e := newExecutor()
 	for _, gate := range gates {
 		if inputA, ok = wires[gate.inputA]; !ok {
@@ -152,13 +203,14 @@ func startGates(gates []gate) map[string]wire {
 			e.exec(xor, inputA, inputB, output)
 		}
 	}
-	return wires
+	return wires, e
 }
 
-func computeResult(wires map[string]wire, initialValues []initialValue) int {
+func computeResult(wires map[string]*wire, initialValues []initialValue, e *executor) int {
 	for _, initialValue := range initialValues {
 		wires[initialValue.name].send(initialValue.value)
 	}
+	e.loop()
 	result := 0
 	bitCount := 0
 	for {
@@ -177,8 +229,8 @@ func computeResult(wires map[string]wire, initialValues []initialValue) int {
 
 func Evaluate(inputs []string) int {
 	initialValues, gates := parseInputs(inputs)
-	wires := startGates(gates)
-	result := computeResult(wires, initialValues)
+	wires, e := startGates(gates)
+	result := computeResult(wires, initialValues, e)
 	return result
 }
 
@@ -202,39 +254,19 @@ func generateInitalValues(x, y, nBits int) []initialValue {
 func FindSwapped(inputs []string) string {
 	initialValues, gates := parseInputs(inputs)
 	nBits := len(initialValues) / 2
-	badWires := map[string]bool{}
 	for i := range nBits {
 		for cx := range 2 {
 			for cy := range 2 {
 				x := cx << i
 				y := cy << i
 				initialValues = generateInitalValues(x, y, nBits)
-				wires := startGates(gates)
-				z := computeResult(wires, initialValues)
+				wires, e := startGates(gates)
+				z := computeResult(wires, initialValues, e)
 				if z-(x+y) != 0 {
 					log.Printf("Result incorrect\n   %045b\n + %045b\n!= %045b", x, y, z)
-					wires := startGates(gates)
-					for _, initialValue := range initialValues {
-						wires[initialValue.name] <- initialValue.value
-					}
-					for name, wire := range wires {
-						value := <-wire
-						wire <- value
-						if value {
-							log.Printf("Wire %q is on", name)
-							c := name[0]
-							if c != 'x' && c != 'y' {
-								badWires[name] = true
-							}
-						}
-					}
 				}
 			}
 		}
 	}
-	for name := range badWires {
-		log.Printf("Wire %q is bad", name)
-	}
-	log.Printf("There are %d bad wires", len(badWires))
 	return ""
 }
