@@ -11,6 +11,31 @@ const (
 	gatePattern         = `^([a-z][0-9a-z]{2}) ((AND)|(OR)|(XOR)) ([a-z][0-9a-z]{2}) -> ([a-z][0-9a-z]{2})$`
 )
 
+type wire chan bool
+
+func newWire() wire {
+	return make(wire, 300)
+}
+
+func (w wire) send(value bool) {
+	w <- value
+}
+
+func (w wire) recv() (value bool, ok bool) {
+	value, ok = <-w
+	return
+}
+
+type executor struct {}
+
+func newExecutor() *executor {
+	return new(executor)
+}
+
+func (e *executor) exec(f func(wire, wire, wire), inputA, inputB, output wire) {
+	go f(inputA, inputB, output)
+}
+
 type initialValue struct {
 	name  string
 	value bool
@@ -59,79 +84,80 @@ func parseInputs(inputs []string) ([]initialValue, []gate) {
 	return initialValues, gates
 }
 
-func and(inputA, inputB chan bool, output chan<- bool) {
+func and(inputA, inputB, output wire) {
 	var a, b, ok bool
-	if a, ok = <-inputA; !ok {
+	if a, ok = inputA.recv(); !ok {
 		return
 	}
 	inputA <- a
-	if b, ok = <-inputB; !ok {
+	if b, ok = inputB.recv(); !ok {
 		return
 	}
-	inputB <- b
-	output <- a && b
+	inputB.send(b)
+	output.send(a && b)
 }
 
-func or(inputA, inputB chan bool, output chan<- bool) {
+func or(inputA, inputB, output wire) {
 	var a, b, ok bool
-	if a, ok = <-inputA; !ok {
+	if a, ok = inputA.recv(); !ok {
 		return
 	}
 	inputA <- a
-	if b, ok = <-inputB; !ok {
+	if b, ok = inputB.recv(); !ok {
 		return
 	}
-	inputB <- b
-	output <- a || b
+	inputB.send(b)
+	output.send(a || b)
 }
 
-func xor(inputA, inputB chan bool, output chan<- bool) {
+func xor(inputA, inputB, output wire) {
 	var a, b, ok bool
-	if a, ok = <-inputA; !ok {
+	if a, ok = inputA.recv(); !ok {
 		return
 	}
 	inputA <- a
-	if b, ok = <-inputB; !ok {
+	if b, ok = inputB.recv(); !ok {
 		return
 	}
-	inputB <- b
-	output <- a != b
+	inputB.send(b)
+	output.send(a != b)
 }
 
-func startGates(gates []gate) map[string]chan bool {
+func startGates(gates []gate) map[string]wire {
 	var (
-		inputA, inputB, output chan bool
+		inputA, inputB, output wire
 		ok                     bool
 	)
-	wires := map[string]chan bool{}
+	wires := map[string]wire{}
+	e := newExecutor()
 	for _, gate := range gates {
 		if inputA, ok = wires[gate.inputA]; !ok {
-			inputA = make(chan bool, len(gates))
+			inputA = newWire()
 			wires[gate.inputA] = inputA
 		}
 		if inputB, ok = wires[gate.inputB]; !ok {
-			inputB = make(chan bool, len(gates))
+			inputB = newWire()
 			wires[gate.inputB] = inputB
 		}
 		if output, ok = wires[gate.output]; !ok {
-			output = make(chan bool, len(gates))
+			output = newWire()
 			wires[gate.output] = output
 		}
 		switch gate.operation {
 		case "AND":
-			go and(inputA, inputB, output)
+			e.exec(and, inputA, inputB, output)
 		case "OR":
-			go or(inputA, inputB, output)
+			e.exec(or, inputA, inputB, output)
 		case "XOR":
-			go xor(inputA, inputB, output)
+			e.exec(xor, inputA, inputB, output)
 		}
 	}
 	return wires
 }
 
-func computeResult(wires map[string]chan bool, initialValues []initialValue) int {
+func computeResult(wires map[string]wire, initialValues []initialValue) int {
 	for _, initialValue := range initialValues {
-		wires[initialValue.name] <- initialValue.value
+		wires[initialValue.name].send(initialValue.value)
 	}
 	result := 0
 	bitCount := 0
@@ -141,7 +167,7 @@ func computeResult(wires map[string]chan bool, initialValues []initialValue) int
 		if !ok {
 			break
 		}
-		if <-wire {
+		if value, _ := wire.recv(); value {
 			result ^= 1 << bitCount
 		}
 		bitCount++
