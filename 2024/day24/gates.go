@@ -388,13 +388,38 @@ func swapWires(gates []gate, swaps map[string]string) []gate {
 	return swappedGates
 }
 
+func swapOutputs(gates []gate, swaps map[string]string) []gate {
+	if len(swaps) == 0 {
+		return gates
+	}
+	swappedGates := make([]gate, len(gates))
+	for nameA, nameB := range swaps {
+		for i, gate := range gates {
+			if swappedGates[i].operation == "" {
+				swappedGates[i] = gate
+			}
+			if gate.output == nameA {
+				swappedGates[i].output = nameB
+			}
+			if gate.output == nameB {
+				swappedGates[i].output = nameA
+			}
+		}
+	}
+	return swappedGates
+}
+
 func FindSwapped(inputs []string) string {
-	initialValues, gates := parseInputs(inputs)
+	_, gates := parseInputs(inputs)
 	wireCounts := map[string]int{}
 	for _, gate := range gates {
 		wireCounts[gate.inputA]++
 		wireCounts[gate.inputB]++
 		wireCounts[gate.output]++
+	}
+	outputWireCounts := map[string]int{}
+	for _, gate := range gates {
+		outputWireCounts[gate.output]++
 	}
 	/*
 		for name, count := range wireCounts {
@@ -403,7 +428,9 @@ func FindSwapped(inputs []string) string {
 			}
 		}
 	*/
-	log.Printf("There are %d gates and %d wires", len(gates), len(wireCounts))
+	log.Printf("There are %d gates, %d wires and %d output wires",
+		len(gates), len(wireCounts), len(outputWireCounts),
+	)
 	//nBits := len(initialValues) / 2
 	nBits := 14
 	/*
@@ -411,16 +438,16 @@ func FindSwapped(inputs []string) string {
 		validatedWires := map[string]bool{}
 	*/
 	wireNames := []string{}
-	for name := range wireCounts {
+	for name := range outputWireCounts {
 		wireNames = append(wireNames, name)
 	}
 iSwapLoop:
 	for iSwap := range wireNames {
 	jSwapLoop:
-		for jSwap := range wireNames[:iSwap] {
+		for jSwap := range wireNames {
 			nameA := wireNames[iSwap]
 			nameB := wireNames[jSwap]
-			swappedGates := swapWires(gates, map[string]string{nameA: nameB})
+			swappedGates := swapOutputs(gates, map[string]string{"z12": nameA, "z21": nameB})
 			allCorrect := true
 			//dependencies := formTree(swappedGates)
 			for i := range nBits {
@@ -428,7 +455,7 @@ iSwapLoop:
 					for cy := range 2 {
 						x := cx << i
 						y := cy << i
-						initialValues = generateInitalValues(x, y, nBits)
+						initialValues := generateInitalValues(x, y, nBits)
 						wires, e := startGates(swappedGates)
 						z, err := computeResult(wires, initialValues, e)
 						if err != nil {
