@@ -410,7 +410,7 @@ func swapOutputs(gates []gate, swaps map[string]string) []gate {
 }
 
 func FindSwapped(inputs []string) string {
-	_, gates := parseInputs(inputs)
+	initialValues, gates := parseInputs(inputs)
 	wireCounts := map[string]int{}
 	for _, gate := range gates {
 		wireCounts[gate.inputA]++
@@ -431,8 +431,8 @@ func FindSwapped(inputs []string) string {
 	log.Printf("There are %d gates, %d wires and %d output wires",
 		len(gates), len(wireCounts), len(outputWireCounts),
 	)
-	//nBits := len(initialValues) / 2
-	nBits := 14
+	nBits := len(initialValues) / 2
+	//nBits := 14
 	/*
 		allValid := true
 		validatedWires := map[string]bool{}
@@ -441,71 +441,73 @@ func FindSwapped(inputs []string) string {
 	for name := range outputWireCounts {
 		wireNames = append(wireNames, name)
 	}
-iSwapLoop:
-	for iSwap := range wireNames {
-	jSwapLoop:
-		for jSwap := range wireNames {
-			nameA := wireNames[iSwap]
-			nameB := wireNames[jSwap]
-			swappedGates := swapOutputs(gates, map[string]string{"z12": nameA, "z21": nameB})
-			allCorrect := true
-			//dependencies := formTree(swappedGates)
-			for i := range nBits {
-				for cx := range 2 {
-					for cy := range 2 {
-						x := cx << i
-						y := cy << i
-						initialValues := generateInitalValues(x, y, nBits)
-						wires, e := startGates(swappedGates)
-						z, err := computeResult(wires, initialValues, e)
-						if err != nil {
-							continue jSwapLoop
-						}
-						if z-(x+y) != 0 {
-							allCorrect = false
-							//allValid = false
-							log.Printf("Result incorrect\n   %045b\n + %045b\n!= %045b", x, y, z)
-							incorrectOutputs := getIncorrectOutputs(x, y, z)
-							log.Printf("Incorrect outputs: %v", incorrectOutputs)
-							/*
-								dependentWires := map[string]bool{}
-								for _, incorrectOutput := range incorrectOutputs {
-									//log.Printf("Gates for output %s:", incorrectOutput)
-									for wireName, _ := range dependencies.connectedNodes(incorrectOutput) {
-
-											if i < 14 && node.childA != nil {
-												op := dependencies.edgeValues[[2]string{wireName, node.childA.id}]
-												log.Printf("%s %s %s -> %s", node.childA.id, op, node.childB.id, wireName)
-											}
-
-										dependentWires[wireName] = true
-									}
-								}
-								problemWires := []string{}
-								for wireName := range maps.Keys(dependentWires) {
-									if !validatedWires[wireName] {
-										problemWires = append(problemWires, wireName)
-									}
-								}
-								slices.Sort(problemWires)
-								log.Printf("Problem wires: %q", problemWires)
-							*/
-						}
-					}
+	//iSwapLoop:
+	//for iSwap := range wireNames {
+	//jSwapLoop:
+	//for jSwap := range wireNames {
+	//nameA := wireNames[iSwap]
+	//nameB := wireNames[jSwap]
+	swappedGates := swapOutputs(gates, map[string]string{"z12": "z12"})
+	//allCorrect := true
+	//dependencies := formTree(swappedGates)
+	for i := range nBits {
+		for cx := range 2 {
+			for cy := range 2 {
+				x := cx << i
+				y := cy << i
+				initialValues := generateInitalValues(x, y, nBits)
+				wires, e := startGates(swappedGates)
+				z, err := computeResult(wires, initialValues, e)
+				if err != nil {
+					//continue jSwapLoop
 				}
-				/*
-					if allValid {
-						for wireName, _ := range dependencies.connectedNodes(fmt.Sprintf("z%02d", i)) {
-							validatedWires[wireName] = true
+				if z-(x+y) != 0 {
+					//allCorrect = false
+					//allValid = false
+					log.Printf("Result incorrect\n   %045b\n + %045b\n!= %045b", x, y, z)
+					incorrectOutputs := getIncorrectOutputs(x, y, z)
+					log.Printf("Incorrect outputs: %v", incorrectOutputs)
+					/*
+						dependentWires := map[string]bool{}
+						for _, incorrectOutput := range incorrectOutputs {
+							//log.Printf("Gates for output %s:", incorrectOutput)
+							for wireName, _ := range dependencies.connectedNodes(incorrectOutput) {
+
+									if i < 14 && node.childA != nil {
+										op := dependencies.edgeValues[[2]string{wireName, node.childA.id}]
+										log.Printf("%s %s %s -> %s", node.childA.id, op, node.childB.id, wireName)
+									}
+
+								dependentWires[wireName] = true
+							}
 						}
-					}
-				*/
-			}
-			if allCorrect {
-				log.Printf("All correct for swap %s <-> %s", nameA, nameB)
-				break iSwapLoop
+						problemWires := []string{}
+						for wireName := range maps.Keys(dependentWires) {
+							if !validatedWires[wireName] {
+								problemWires = append(problemWires, wireName)
+							}
+						}
+						slices.Sort(problemWires)
+						log.Printf("Problem wires: %q", problemWires)
+					*/
+				}
 			}
 		}
+		/*
+			if allValid {
+				for wireName, _ := range dependencies.connectedNodes(fmt.Sprintf("z%02d", i)) {
+					validatedWires[wireName] = true
+				}
+			}
+		*/
 	}
+	/*
+				if allCorrect {
+					log.Printf("All correct for swap %s <-> %s", nameA, nameB)
+					break iSwapLoop
+				}
+			}
+		}
+	*/
 	return ""
 }
