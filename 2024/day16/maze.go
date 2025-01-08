@@ -2,6 +2,7 @@ package day16
 
 import (
 	"aoc2024/deque"
+	"aoc2024/set"
 	"iter"
 )
 
@@ -17,43 +18,6 @@ const (
 	maxUint   = ^uint(0)
 	maxInt    = int(maxUint >> 1)
 )
-
-type set[T comparable] struct {
-	values map[T]bool
-}
-
-func newSet[T comparable]() set[T] {
-	return set[T]{
-		values: map[T]bool{},
-	}
-}
-
-func (s *set[T]) add(v T) {
-	s.values[v] = true
-}
-
-func (s *set[T]) remove(v T) {
-	delete(s.values, v)
-}
-
-func (s *set[T]) contains(v T) bool {
-	_, ok := s.values[v]
-	return ok
-}
-
-func (s *set[T]) all() iter.Seq[T] {
-	return func(yield func(T) bool) {
-		for v := range s.values {
-			if !yield(v) {
-				break
-			}
-		}
-	}
-}
-
-func (s *set[T]) size() int {
-	return len(s.values)
-}
 
 type vector struct {
 	x, y int
@@ -138,25 +102,25 @@ func dijkstra[T any](g *graph[T], startId int) ([]int, [][]int) {
 	nnodes := len(g.nodes)
 	dists := make([]int, len(g.nodes))
 	prevs := make([][]int, len(g.nodes))
-	unvisited := newSet[int]()
+	unvisited := set.NewSet[int]()
 	for i := range nnodes {
 		dists[i] = maxInt
-		unvisited.add(i)
+		unvisited.Add(i)
 	}
 	dists[startId] = 0
 
-	for unvisited.size() > 0 {
+	for unvisited.Len() > 0 {
 		minValue := maxInt
-		for v := range unvisited.all() {
+		for v := range unvisited.All() {
 			if dists[v] < minValue {
 				minValue = dists[v]
 				u = v
 			}
 		}
-		unvisited.remove(u)
+		unvisited.Remove(u)
 
 		for _, conn := range g.adjacencies[u] {
-			if unvisited.contains(conn.nodeId) {
+			if unvisited.Contains(conn.nodeId) {
 				d := dists[u] + conn.edgeWeight
 				if d < dists[conn.nodeId] {
 					dists[conn.nodeId] = d
@@ -379,11 +343,11 @@ func CountTiles(inputs []string) int {
 	}
 	ids := deque.NewDeque[int](-1)
 	ids.Append(maze.endIds[endIdIndex])
-	positions := newSet[vector]()
+	positions := set.NewSet[vector]()
 	for {
 		if id, ok := ids.Pop(); ok {
 			node := maze.graph.nodes[id]
-			positions.add(node.position)
+			positions.Add(node.position)
 			for _, prevId := range prevs[id] {
 				ids.Append(prevId)
 			}
@@ -391,5 +355,5 @@ func CountTiles(inputs []string) int {
 			break
 		}
 	}
-	return positions.size()
+	return positions.Len()
 }

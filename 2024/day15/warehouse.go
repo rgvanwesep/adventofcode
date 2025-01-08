@@ -2,6 +2,7 @@ package day15
 
 import (
 	"aoc2024/deque"
+	"aoc2024/set"
 	"iter"
 )
 
@@ -185,42 +186,6 @@ func (w *warehouse) sumCoordinates() int {
 	return sum
 }
 
-type set[T comparable] struct {
-	values map[T]bool
-}
-
-func newSet[T comparable]() set[T] {
-	return set[T]{
-		values: map[T]bool{},
-	}
-}
-
-func (s *set[T]) add(v T) {
-	s.values[v] = true
-}
-
-func (s *set[T]) remove(v T) {
-	delete(s.values, v)
-}
-
-func (s *set[T]) all() iter.Seq[T] {
-	return func(yield func(T) bool) {
-		for v := range s.values {
-			if !yield(v) {
-				break
-			}
-		}
-	}
-}
-
-func (s *set[T]) size() int {
-	return len(s.values)
-}
-
-func (s *set[T]) clear() {
-	s.values = map[T]bool{}
-}
-
 type wideWarehouse struct {
 	grid        *grid
 	robotPos    vector
@@ -261,12 +226,12 @@ func (w *wideWarehouse) update() bool {
 	if w.currentMove >= len(w.moves) {
 		return false
 	}
-	updateVecs := newSet[vector]()
+	updateVecs := set.NewSet[vector]()
 	frontVecs := deque.NewDeque[vector](-1)
 	move := w.moves[w.currentMove]
 	switch move {
 	case upChar:
-		updateVecs.add(vector{w.robotPos.x, w.robotPos.y})
+		updateVecs.Add(vector{w.robotPos.x, w.robotPos.y})
 		frontVecs.Append(vector{w.robotPos.x, w.robotPos.y + 1})
 	frontLoopUp:
 		for {
@@ -274,25 +239,25 @@ func (w *wideWarehouse) update() bool {
 				c := w.grid.get(frontVec)
 				switch c {
 				case boxLeftChar:
-					updateVecs.add(vector{frontVec.x, frontVec.y})
-					updateVecs.add(vector{frontVec.x + 1, frontVec.y})
+					updateVecs.Add(vector{frontVec.x, frontVec.y})
+					updateVecs.Add(vector{frontVec.x + 1, frontVec.y})
 					frontVecs.Append(vector{frontVec.x, frontVec.y + 1})
 					frontVecs.Append(vector{frontVec.x + 1, frontVec.y + 1})
 				case boxRightChar:
-					updateVecs.add(vector{frontVec.x, frontVec.y})
-					updateVecs.add(vector{frontVec.x - 1, frontVec.y})
+					updateVecs.Add(vector{frontVec.x, frontVec.y})
+					updateVecs.Add(vector{frontVec.x - 1, frontVec.y})
 					frontVecs.Append(vector{frontVec.x, frontVec.y + 1})
 					frontVecs.Append(vector{frontVec.x - 1, frontVec.y + 1})
 				case wallChar:
-					updateVecs.clear()
+					updateVecs.Clear()
 					break frontLoopUp
 				}
 			} else {
 				break frontLoopUp
 			}
 		}
-		for updateVecs.size() > 0 {
-			for updateVec := range updateVecs.all() {
+		for updateVecs.Len() > 0 {
+			for updateVec := range updateVecs.All() {
 				nextVec := vector{updateVec.x, updateVec.y + 1}
 				if w.grid.get(nextVec) == emptyChar {
 					c := w.grid.get(updateVec)
@@ -301,12 +266,12 @@ func (w *wideWarehouse) update() bool {
 					if c == robotChar {
 						w.robotPos = nextVec
 					}
-					updateVecs.remove(updateVec)
+					updateVecs.Remove(updateVec)
 				}
 			}
 		}
 	case downChar:
-		updateVecs.add(vector{w.robotPos.x, w.robotPos.y})
+		updateVecs.Add(vector{w.robotPos.x, w.robotPos.y})
 		frontVecs.Append(vector{w.robotPos.x, w.robotPos.y - 1})
 	frontLoopDown:
 		for {
@@ -314,25 +279,25 @@ func (w *wideWarehouse) update() bool {
 				c := w.grid.get(frontVec)
 				switch c {
 				case boxLeftChar:
-					updateVecs.add(vector{frontVec.x, frontVec.y})
-					updateVecs.add(vector{frontVec.x + 1, frontVec.y})
+					updateVecs.Add(vector{frontVec.x, frontVec.y})
+					updateVecs.Add(vector{frontVec.x + 1, frontVec.y})
 					frontVecs.Append(vector{frontVec.x, frontVec.y - 1})
 					frontVecs.Append(vector{frontVec.x + 1, frontVec.y - 1})
 				case boxRightChar:
-					updateVecs.add(vector{frontVec.x, frontVec.y})
-					updateVecs.add(vector{frontVec.x - 1, frontVec.y})
+					updateVecs.Add(vector{frontVec.x, frontVec.y})
+					updateVecs.Add(vector{frontVec.x - 1, frontVec.y})
 					frontVecs.Append(vector{frontVec.x, frontVec.y - 1})
 					frontVecs.Append(vector{frontVec.x - 1, frontVec.y - 1})
 				case wallChar:
-					updateVecs.clear()
+					updateVecs.Clear()
 					break frontLoopDown
 				}
 			} else {
 				break frontLoopDown
 			}
 		}
-		for updateVecs.size() > 0 {
-			for updateVec := range updateVecs.all() {
+		for updateVecs.Len() > 0 {
+			for updateVec := range updateVecs.All() {
 				nextVec := vector{updateVec.x, updateVec.y - 1}
 				if w.grid.get(nextVec) == emptyChar {
 					c := w.grid.get(updateVec)
@@ -341,12 +306,12 @@ func (w *wideWarehouse) update() bool {
 					if c == robotChar {
 						w.robotPos = nextVec
 					}
-					updateVecs.remove(updateVec)
+					updateVecs.Remove(updateVec)
 				}
 			}
 		}
 	case leftChar:
-		updateVecs.add(vector{w.robotPos.x, w.robotPos.y})
+		updateVecs.Add(vector{w.robotPos.x, w.robotPos.y})
 		frontVecs.Append(vector{w.robotPos.x - 1, w.robotPos.y})
 	frontLoopLeft:
 		for {
@@ -354,19 +319,19 @@ func (w *wideWarehouse) update() bool {
 				c := w.grid.get(frontVec)
 				switch c {
 				case boxRightChar:
-					updateVecs.add(vector{frontVec.x, frontVec.y})
-					updateVecs.add(vector{frontVec.x - 1, frontVec.y})
+					updateVecs.Add(vector{frontVec.x, frontVec.y})
+					updateVecs.Add(vector{frontVec.x - 1, frontVec.y})
 					frontVecs.Append(vector{frontVec.x - 2, frontVec.y})
 				case wallChar:
-					updateVecs.clear()
+					updateVecs.Clear()
 					break frontLoopLeft
 				}
 			} else {
 				break frontLoopLeft
 			}
 		}
-		for updateVecs.size() > 0 {
-			for updateVec := range updateVecs.all() {
+		for updateVecs.Len() > 0 {
+			for updateVec := range updateVecs.All() {
 				nextVec := vector{updateVec.x - 1, updateVec.y}
 				if w.grid.get(nextVec) == emptyChar {
 					c := w.grid.get(updateVec)
@@ -375,12 +340,12 @@ func (w *wideWarehouse) update() bool {
 					if c == robotChar {
 						w.robotPos = nextVec
 					}
-					updateVecs.remove(updateVec)
+					updateVecs.Remove(updateVec)
 				}
 			}
 		}
 	case rightChar:
-		updateVecs.add(vector{w.robotPos.x, w.robotPos.y})
+		updateVecs.Add(vector{w.robotPos.x, w.robotPos.y})
 		frontVecs.Append(vector{w.robotPos.x + 1, w.robotPos.y})
 	frontLoopRight:
 		for {
@@ -388,19 +353,19 @@ func (w *wideWarehouse) update() bool {
 				c := w.grid.get(frontVec)
 				switch c {
 				case boxLeftChar:
-					updateVecs.add(vector{frontVec.x, frontVec.y})
-					updateVecs.add(vector{frontVec.x + 1, frontVec.y})
+					updateVecs.Add(vector{frontVec.x, frontVec.y})
+					updateVecs.Add(vector{frontVec.x + 1, frontVec.y})
 					frontVecs.Append(vector{frontVec.x + 2, frontVec.y})
 				case wallChar:
-					updateVecs.clear()
+					updateVecs.Clear()
 					break frontLoopRight
 				}
 			} else {
 				break frontLoopRight
 			}
 		}
-		for updateVecs.size() > 0 {
-			for updateVec := range updateVecs.all() {
+		for updateVecs.Len() > 0 {
+			for updateVec := range updateVecs.All() {
 				nextVec := vector{updateVec.x + 1, updateVec.y}
 				if w.grid.get(nextVec) == emptyChar {
 					c := w.grid.get(updateVec)
@@ -409,7 +374,7 @@ func (w *wideWarehouse) update() bool {
 					if c == robotChar {
 						w.robotPos = nextVec
 					}
-					updateVecs.remove(updateVec)
+					updateVecs.Remove(updateVec)
 				}
 			}
 		}
