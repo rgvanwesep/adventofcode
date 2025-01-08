@@ -1,6 +1,9 @@
 package day15
 
-import "iter"
+import (
+	"aoc2024/deque"
+	"iter"
+)
 
 const (
 	emptyChar    = '.'
@@ -182,34 +185,6 @@ func (w *warehouse) sumCoordinates() int {
 	return sum
 }
 
-type stack[T any] struct {
-	values []T
-}
-
-func newStack[T any]() stack[T] {
-	return stack[T]{
-		values: []T{},
-	}
-}
-
-func (s *stack[T]) push(v T) {
-	s.values = append(s.values, v)
-}
-
-func (s *stack[T]) pop() (v T, ok bool) {
-	size := len(s.values)
-	if size > 0 {
-		v = s.values[size-1]
-		s.values = s.values[:size-1]
-		ok = true
-	}
-	return
-}
-
-func (s *stack[T]) clear() {
-	s.values = []T{}
-}
-
 type set[T comparable] struct {
 	values map[T]bool
 }
@@ -287,27 +262,27 @@ func (w *wideWarehouse) update() bool {
 		return false
 	}
 	updateVecs := newSet[vector]()
-	frontVecs := newStack[vector]()
+	frontVecs := deque.NewDeque[vector](-1)
 	move := w.moves[w.currentMove]
 	switch move {
 	case upChar:
 		updateVecs.add(vector{w.robotPos.x, w.robotPos.y})
-		frontVecs.push(vector{w.robotPos.x, w.robotPos.y + 1})
+		frontVecs.Append(vector{w.robotPos.x, w.robotPos.y + 1})
 	frontLoopUp:
 		for {
-			if frontVec, ok := frontVecs.pop(); ok {
+			if frontVec, ok := frontVecs.Pop(); ok {
 				c := w.grid.get(frontVec)
 				switch c {
 				case boxLeftChar:
 					updateVecs.add(vector{frontVec.x, frontVec.y})
 					updateVecs.add(vector{frontVec.x + 1, frontVec.y})
-					frontVecs.push(vector{frontVec.x, frontVec.y + 1})
-					frontVecs.push(vector{frontVec.x + 1, frontVec.y + 1})
+					frontVecs.Append(vector{frontVec.x, frontVec.y + 1})
+					frontVecs.Append(vector{frontVec.x + 1, frontVec.y + 1})
 				case boxRightChar:
 					updateVecs.add(vector{frontVec.x, frontVec.y})
 					updateVecs.add(vector{frontVec.x - 1, frontVec.y})
-					frontVecs.push(vector{frontVec.x, frontVec.y + 1})
-					frontVecs.push(vector{frontVec.x - 1, frontVec.y + 1})
+					frontVecs.Append(vector{frontVec.x, frontVec.y + 1})
+					frontVecs.Append(vector{frontVec.x - 1, frontVec.y + 1})
 				case wallChar:
 					updateVecs.clear()
 					break frontLoopUp
@@ -332,22 +307,22 @@ func (w *wideWarehouse) update() bool {
 		}
 	case downChar:
 		updateVecs.add(vector{w.robotPos.x, w.robotPos.y})
-		frontVecs.push(vector{w.robotPos.x, w.robotPos.y - 1})
+		frontVecs.Append(vector{w.robotPos.x, w.robotPos.y - 1})
 	frontLoopDown:
 		for {
-			if frontVec, ok := frontVecs.pop(); ok {
+			if frontVec, ok := frontVecs.Pop(); ok {
 				c := w.grid.get(frontVec)
 				switch c {
 				case boxLeftChar:
 					updateVecs.add(vector{frontVec.x, frontVec.y})
 					updateVecs.add(vector{frontVec.x + 1, frontVec.y})
-					frontVecs.push(vector{frontVec.x, frontVec.y - 1})
-					frontVecs.push(vector{frontVec.x + 1, frontVec.y - 1})
+					frontVecs.Append(vector{frontVec.x, frontVec.y - 1})
+					frontVecs.Append(vector{frontVec.x + 1, frontVec.y - 1})
 				case boxRightChar:
 					updateVecs.add(vector{frontVec.x, frontVec.y})
 					updateVecs.add(vector{frontVec.x - 1, frontVec.y})
-					frontVecs.push(vector{frontVec.x, frontVec.y - 1})
-					frontVecs.push(vector{frontVec.x - 1, frontVec.y - 1})
+					frontVecs.Append(vector{frontVec.x, frontVec.y - 1})
+					frontVecs.Append(vector{frontVec.x - 1, frontVec.y - 1})
 				case wallChar:
 					updateVecs.clear()
 					break frontLoopDown
@@ -372,16 +347,16 @@ func (w *wideWarehouse) update() bool {
 		}
 	case leftChar:
 		updateVecs.add(vector{w.robotPos.x, w.robotPos.y})
-		frontVecs.push(vector{w.robotPos.x - 1, w.robotPos.y})
+		frontVecs.Append(vector{w.robotPos.x - 1, w.robotPos.y})
 	frontLoopLeft:
 		for {
-			if frontVec, ok := frontVecs.pop(); ok {
+			if frontVec, ok := frontVecs.Pop(); ok {
 				c := w.grid.get(frontVec)
 				switch c {
 				case boxRightChar:
 					updateVecs.add(vector{frontVec.x, frontVec.y})
 					updateVecs.add(vector{frontVec.x - 1, frontVec.y})
-					frontVecs.push(vector{frontVec.x - 2, frontVec.y})
+					frontVecs.Append(vector{frontVec.x - 2, frontVec.y})
 				case wallChar:
 					updateVecs.clear()
 					break frontLoopLeft
@@ -406,16 +381,16 @@ func (w *wideWarehouse) update() bool {
 		}
 	case rightChar:
 		updateVecs.add(vector{w.robotPos.x, w.robotPos.y})
-		frontVecs.push(vector{w.robotPos.x + 1, w.robotPos.y})
+		frontVecs.Append(vector{w.robotPos.x + 1, w.robotPos.y})
 	frontLoopRight:
 		for {
-			if frontVec, ok := frontVecs.pop(); ok {
+			if frontVec, ok := frontVecs.Pop(); ok {
 				c := w.grid.get(frontVec)
 				switch c {
 				case boxLeftChar:
 					updateVecs.add(vector{frontVec.x, frontVec.y})
 					updateVecs.add(vector{frontVec.x + 1, frontVec.y})
-					frontVecs.push(vector{frontVec.x + 2, frontVec.y})
+					frontVecs.Append(vector{frontVec.x + 2, frontVec.y})
 				case wallChar:
 					updateVecs.clear()
 					break frontLoopRight

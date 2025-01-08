@@ -1,6 +1,7 @@
 package day12
 
 import (
+	"aoc2024/deque"
 	"iter"
 	"log"
 )
@@ -54,53 +55,6 @@ func (g *Grid[T]) All() iter.Seq2[Point, T] {
 		for i := 0; i < len(g.values) && yield(iToP(i), g.values[i]); i++ {
 		}
 	}
-}
-
-type Queue[T any] struct {
-	values []T
-}
-
-func NewQueue[T any]() *Queue[T] {
-	return &Queue[T]{
-		values: []T{},
-	}
-}
-
-func (q *Queue[T]) Pop() (value T, ok bool) {
-	if len(q.values) > 0 {
-		value = q.values[0]
-		q.values = q.values[1:]
-		ok = true
-	}
-	return
-}
-
-func (q *Queue[T]) Push(value T) {
-	q.values = append(q.values, value)
-}
-
-type Stack[T any] struct {
-	values []T
-}
-
-func NewStack[T any]() *Stack[T] {
-	return &Stack[T]{
-		values: []T{},
-	}
-}
-
-func (s *Stack[T]) Pop() (value T, ok bool) {
-	size := len(s.values)
-	if size > 0 {
-		value = s.values[size-1]
-		s.values = s.values[:size-1]
-		ok = true
-	}
-	return
-}
-
-func (s *Stack[T]) Push(value T) {
-	s.values = append(s.values, value)
 }
 
 type Plot struct {
@@ -157,13 +111,13 @@ func AssignRegions(grid *Grid[Plot]) int {
 	regionId := 1
 	for p, plot := range grid.All() {
 		if plot.regionId == 0 {
-			mappers := NewStack[Mapper]()
-			mappers.Push(Mapper{position: p, region: Region{regionId, plot.plant}})
+			mappers := deque.NewDeque[Mapper](-1)
+			mappers.Append(Mapper{position: p, region: Region{regionId, plot.plant}})
 			for {
 				if mapper, ok := mappers.Pop(); ok {
 					newMappers := mapper.Step(grid)
 					for _, m := range newMappers {
-						mappers.Push(m)
+						mappers.Append(m)
 					}
 				} else {
 					break

@@ -1,6 +1,9 @@
 package day10
 
-import "log"
+import (
+	"aoc2024/deque"
+	"log"
+)
 
 const ZERO byte = '0'
 
@@ -37,30 +40,6 @@ func (g *Grid[T]) SetValue(p Point, v T) (ok bool) {
 		ok = true
 	}
 	return
-}
-
-type Stack[T any] struct {
-	values []T
-}
-
-func NewStack[T any]() *Stack[T] {
-	return &Stack[T]{
-		values: []T{},
-	}
-}
-
-func (s *Stack[T]) Pop() (value T, ok bool) {
-	size := len(s.values)
-	if size > 0 {
-		value = s.values[size-1]
-		s.values = s.values[:size-1]
-		ok = true
-	}
-	return
-}
-
-func (s *Stack[T]) Push(value T) {
-	s.values = append(s.values, value)
 }
 
 type Hiker struct {
@@ -125,23 +104,23 @@ func ParseGrid(inputs []string) (*Grid[byte], []Point) {
 	return grid, trailHeads
 }
 
-func RunHikers(grid *Grid[byte], trailHeads []Point) *Stack[Hiker] {
-	hikers := NewStack[Hiker]()
+func RunHikers(grid *Grid[byte], trailHeads []Point) deque.Deque[Hiker] {
+	hikers := deque.NewDeque[Hiker](-1)
 	for _, p := range trailHeads {
-		hikers.Push(Hiker{
+		hikers.Append(Hiker{
 			origin:   p,
 			position: p,
 		})
 	}
-	halted := NewStack[Hiker]()
+	halted := deque.NewDeque[Hiker](-1)
 	for {
 		if hiker, ok := hikers.Pop(); ok {
 			newHikers := hiker.Step(grid)
 			for _, h := range newHikers {
 				if h.halted {
-					halted.Push(h)
+					halted.Append(h)
 				} else {
-					hikers.Push(h)
+					hikers.Append(h)
 				}
 			}
 		} else {

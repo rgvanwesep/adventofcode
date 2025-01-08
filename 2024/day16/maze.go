@@ -1,6 +1,9 @@
 package day16
 
-import "iter"
+import (
+	"aoc2024/deque"
+	"iter"
+)
 
 const (
 	emptyChar = '.'
@@ -14,34 +17,6 @@ const (
 	maxUint   = ^uint(0)
 	maxInt    = int(maxUint >> 1)
 )
-
-type stack[T any] struct {
-	values []T
-}
-
-func newStack[T any]() stack[T] {
-	return stack[T]{
-		values: []T{},
-	}
-}
-
-func (s *stack[T]) push(v T) {
-	s.values = append(s.values, v)
-}
-
-func (s *stack[T]) pop() (v T, ok bool) {
-	size := len(s.values)
-	if size > 0 {
-		v = s.values[size-1]
-		s.values = s.values[:size-1]
-		ok = true
-	}
-	return
-}
-
-func (s *stack[T]) clear() {
-	s.values = []T{}
-}
 
 type set[T comparable] struct {
 	values map[T]bool
@@ -402,15 +377,15 @@ func CountTiles(inputs []string) int {
 			endIdIndex = j
 		}
 	}
-	ids := newStack[int]()
-	ids.push(maze.endIds[endIdIndex])
+	ids := deque.NewDeque[int](-1)
+	ids.Append(maze.endIds[endIdIndex])
 	positions := newSet[vector]()
 	for {
-		if id, ok := ids.pop(); ok {
+		if id, ok := ids.Pop(); ok {
 			node := maze.graph.nodes[id]
 			positions.add(node.position)
 			for _, prevId := range prevs[id] {
-				ids.push(prevId)
+				ids.Append(prevId)
 			}
 		} else {
 			break

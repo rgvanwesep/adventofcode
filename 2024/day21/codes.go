@@ -1,6 +1,7 @@
 package day21
 
 import (
+	"aoc2024/deque"
 	"iter"
 	"log"
 	"slices"
@@ -11,26 +12,6 @@ const (
 	maxUint = ^uint(0)
 	maxInt  = int(maxUint >> 1)
 )
-
-type stack[T any] struct {
-	size   int
-	values []T
-}
-
-func (s *stack[T]) push(value T) {
-	s.size++
-	s.values = append(s.values, value)
-}
-
-func (s *stack[T]) pop() (value T, ok bool) {
-	ok = s.size > 0
-	if ok {
-		s.size--
-		value = s.values[s.size]
-		s.values = s.values[:s.size]
-	}
-	return
-}
 
 func getNumericPart(input string) int {
 	inputBytes := []byte(input)
@@ -102,17 +83,17 @@ type keyPad struct {
 
 func (k keyPad) getDirectionalSequences(from, to byte) []string {
 	finalSeqs := []string{}
-	seqs := new(stack[struct {
+	seqs := deque.NewDeque[struct {
 		from, to byte
 		seq      []byte
-	}])
-	seqs.push(struct {
+	}](-1)
+	seqs.Append(struct {
 		from byte
 		to   byte
 		seq  []byte
 	}{from, to, []byte{}})
 	for {
-		if current, ok := seqs.pop(); ok {
+		if current, ok := seqs.Pop(); ok {
 			seq := current.seq
 			from := current.from
 			to := current.to
@@ -126,7 +107,7 @@ func (k keyPad) getDirectionalSequences(from, to byte) []string {
 			yDiff := toVec.y - fromVec.y
 			if xDiff < 0 {
 				if newFrom, ok := k.layout.get(vector{fromVec.x - 1, fromVec.y}); ok && newFrom != 0 {
-					seqs.push(struct {
+					seqs.Append(struct {
 						from byte
 						to   byte
 						seq  []byte
@@ -138,7 +119,7 @@ func (k keyPad) getDirectionalSequences(from, to byte) []string {
 				}
 			} else if xDiff > 0 {
 				if newFrom, ok := k.layout.get(vector{fromVec.x + 1, fromVec.y}); ok && newFrom != 0 {
-					seqs.push(struct {
+					seqs.Append(struct {
 						from byte
 						to   byte
 						seq  []byte
@@ -151,7 +132,7 @@ func (k keyPad) getDirectionalSequences(from, to byte) []string {
 			}
 			if yDiff < 0 {
 				if newFrom, ok := k.layout.get(vector{fromVec.x, fromVec.y - 1}); ok && newFrom != 0 {
-					seqs.push(struct {
+					seqs.Append(struct {
 						from byte
 						to   byte
 						seq  []byte
@@ -163,7 +144,7 @@ func (k keyPad) getDirectionalSequences(from, to byte) []string {
 				}
 			} else if yDiff > 0 {
 				if newFrom, ok := k.layout.get(vector{fromVec.x, fromVec.y + 1}); ok && newFrom != 0 {
-					seqs.push(struct {
+					seqs.Append(struct {
 						from byte
 						to   byte
 						seq  []byte
@@ -292,16 +273,16 @@ func (k *directionalKeyPad) setExpansionMap() {
 	k.expansionMap = make([][][]int, len(k.directionalSequences))
 	for directionalSequence, i := range k.directionalSequences {
 		k.expansionMap[i] = [][]int{}
-		s := new(stack[struct {
+		s := deque.NewDeque[struct {
 			index    int
 			from, to byte
 			indices  []int
-		}])
+		}](-1)
 		var from byte = 'A'
 		to := directionalSequence[0]
 		for _, seq := range k.getDirectionalSequences(from, to) {
 			l := k.directionalSequences[seq]
-			s.push(struct {
+			s.Append(struct {
 				index   int
 				from    byte
 				to      byte
@@ -314,14 +295,14 @@ func (k *directionalKeyPad) setExpansionMap() {
 			})
 		}
 		for {
-			if current, ok := s.pop(); ok {
+			if current, ok := s.Pop(); ok {
 				if current.index < len(directionalSequence)-1 {
 					index := current.index + 1
 					from := current.to
 					to := directionalSequence[index]
 					for _, seq := range k.getDirectionalSequences(from, to) {
 						l := k.directionalSequences[seq]
-						s.push(struct {
+						s.Append(struct {
 							index   int
 							from    byte
 							to      byte
@@ -379,13 +360,13 @@ func getShortestSequenceLength(input string, nDirectionalKeypads int) int {
 			index := 0
 			var fromDirectional byte = 'A'
 			toDirectional := initialDirectionalSequence[index]
-			s := new(stack[struct {
+			s := deque.NewDeque[struct {
 				index    int
 				from, to byte
 				sum      int
-			}])
+			}](-1)
 			for _, directionalSequence := range directionalKeyPad.getDirectionalSequences(fromDirectional, toDirectional) {
-				s.push(struct {
+				s.Append(struct {
 					index int
 					from  byte
 					to    byte
@@ -398,13 +379,13 @@ func getShortestSequenceLength(input string, nDirectionalKeypads int) int {
 				})
 			}
 			for {
-				if current, ok := s.pop(); ok {
+				if current, ok := s.Pop(); ok {
 					if current.index < len(initialDirectionalSequence)-1 {
 						index := current.index + 1
 						from := current.to
 						to := initialDirectionalSequence[index]
 						for _, directionalSequence := range directionalKeyPad.getDirectionalSequences(from, to) {
-							s.push(struct {
+							s.Append(struct {
 								index int
 								from  byte
 								to    byte
