@@ -1,7 +1,7 @@
+use aoc::RotationSeq;
 use clap::Parser;
 use std::error::Error;
 use std::io;
-use aoc::RotationSeq;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -23,9 +23,19 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     match (args.day, args.part) {
         (1, 1) => {
-            println!("Result: {}", RotationSeq::build(inputs.iter().map(String::as_str).collect())?.count_zeros());
+            println!(
+                "Result: {}",
+                RotationSeq::build(inputs.iter().map(String::as_str).collect())?.count_zeros()
+            );
             Ok(())
-        },
+        }
+        (1, 2) => {
+            println!(
+                "Result: {}",
+                RotationSeq::build(inputs.iter().map(String::as_str).collect())?.count_all_zeros()
+            );
+            Ok(())
+        }
         _ => Err(format!("No match for Day {}, Part {}", args.day, args.part).into()),
     }
 }
