@@ -1,0 +1,195 @@
+use regex::Regex;
+
+#[derive(Debug, PartialEq)]
+enum Direction {
+    Left,
+    Right,
+}
+
+impl Direction {
+    fn build(input: &str) -> Result<Direction, &'static str> {
+        match input {
+            "L" => Ok(Direction::Left),
+            "R" => Ok(Direction::Right),
+            _ => Err("Invalid input for Direction"),
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
+struct Rotation {
+    direction: Direction,
+    distance: i32,
+}
+
+impl Rotation {
+    fn build(input: &str) -> Result<Rotation, &'static str> {
+        let re = Regex::new(r"(?<direction>L|R)(?<distance>[0-9]+)").unwrap();
+        let Some(caps) = re.captures(input) else {
+            return Err("Invalid input for Rotation");
+        };
+        let direction = Direction::build(&caps["direction"])?;
+        let distance: i32 = String::from(&caps["distance"]).parse().unwrap();
+        Ok(Rotation {
+            direction,
+            distance,
+        })
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct RotationSeq {
+    rotations: Vec<Rotation>,
+}
+
+impl RotationSeq {
+    pub fn build(inputs: Vec<&str>) -> Result<RotationSeq, &'static str> {
+        let mut rotations = Vec::new();
+        let mut rotation;
+        for item in inputs {
+            rotation = Rotation::build(item)?;
+            rotations.push(rotation)
+        }
+        Ok(RotationSeq { rotations })
+    }
+
+    pub fn count_zeros(&self) -> u32 {
+        let mut count: u32 = 0;
+        let mut position: i32 = 50;
+        for rotation in &self.rotations {
+            position = match rotation {
+                Rotation {direction: Direction::Left, distance} => (position - distance) % 100,
+                Rotation {direction: Direction::Right, distance} => (position + distance) % 100,
+            };
+            if position == 0 {
+                count += 1;
+            };
+        }
+        count
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn direction_ok() {
+        assert_eq!(Direction::build("L").unwrap(), Direction::Left);
+        assert_eq!(Direction::build("R").unwrap(), Direction::Right);
+    }
+
+    #[test]
+    #[should_panic]
+    fn direction_err() {
+        Direction::build("O").unwrap();
+    }
+
+    #[test]
+    fn rotation_ok() {
+        assert_eq!(
+            Rotation::build("L1").unwrap(),
+            Rotation {
+                direction: Direction::Left,
+                distance: 1
+            }
+        );
+        assert_eq!(
+            Rotation::build("L19").unwrap(),
+            Rotation {
+                direction: Direction::Left,
+                distance: 19
+            }
+        );
+        assert_eq!(
+            Rotation::build("L123").unwrap(),
+            Rotation {
+                direction: Direction::Left,
+                distance: 123
+            }
+        );
+        assert_eq!(
+            Rotation::build("R2").unwrap(),
+            Rotation {
+                direction: Direction::Right,
+                distance: 2
+            }
+        );
+        assert_eq!(
+            Rotation::build("R28").unwrap(),
+            Rotation {
+                direction: Direction::Right,
+                distance: 28
+            }
+        );
+    }
+
+    #[test]
+    #[should_panic]
+    fn rotation_err() {
+        Direction::build("O123").unwrap();
+    }
+
+    #[test]
+    fn rotation_seq() {
+        let input = vec![
+            "L68", "L30", "R48", "L5", "R60", "L55", "L1", "L99", "R14", "L82",
+        ];
+        assert_eq!(
+            RotationSeq::build(input).unwrap(),
+            RotationSeq {
+                rotations: vec![
+                    Rotation {
+                        direction: Direction::Left,
+                        distance: 68,
+                    },
+                    Rotation {
+                        direction: Direction::Left,
+                        distance: 30,
+                    },
+                    Rotation {
+                        direction: Direction::Right,
+                        distance: 48,
+                    },
+                    Rotation {
+                        direction: Direction::Left,
+                        distance: 5,
+                    },
+                    Rotation {
+                        direction: Direction::Right,
+                        distance: 60,
+                    },
+                    Rotation {
+                        direction: Direction::Left,
+                        distance: 55,
+                    },
+                    Rotation {
+                        direction: Direction::Left,
+                        distance: 1,
+                    },
+                    Rotation {
+                        direction: Direction::Left,
+                        distance: 99,
+                    },
+                    Rotation {
+                        direction: Direction::Right,
+                        distance: 14,
+                    },
+                    Rotation {
+                        direction: Direction::Left,
+                        distance: 82,
+                    },
+                ]
+            }
+        )
+    }
+
+    #[test]
+    fn count_zeros() {
+        let input = vec![
+            "L68", "L30", "R48", "L5", "R60", "L55", "L1", "L99", "R14", "L82",
+        ];
+        let rotation_seq = RotationSeq::build(input).unwrap();
+        assert_eq!(rotation_seq.count_zeros(), 3);
+    }
+}
