@@ -1,4 +1,4 @@
-use aoc::RotationSeq;
+use aoc::day1::RotationSeq;
 use clap::Parser;
 use std::error::Error;
 use std::io;
