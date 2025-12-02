@@ -1,4 +1,5 @@
 use aoc::day1::RotationSeq;
+use aoc::day2;
 use clap::Parser;
 use std::error::Error;
 use std::io;
@@ -34,6 +35,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                 "Result: {}",
                 RotationSeq::build(inputs.iter().map(String::as_str).collect())?.count_all_zeros()
             );
+            Ok(())
+        }
+        (2, 1) => {
+            println!("Result: {}", day2::add_invalid_ids(inputs[0].as_str()));
             Ok(())
         }
         _ => Err(format!("No match for Day {}, Part {}", args.day, args.part).into()),
