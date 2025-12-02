@@ -53,16 +53,16 @@ impl Dial {
         }
     }
 
-    fn rotate(&mut self, r: Rotation) {
+    fn rotate(&mut self, r: &Rotation) {
         match r {
             Rotation {
                 direction: Direction::Left,
                 distance,
-            } => self.rotate_left(distance),
+            } => self.rotate_left(*distance),
             Rotation {
                 direction: Direction::Right,
                 distance,
-            } => self.rotate_right(distance),
+            } => self.rotate_right(*distance),
         }
     }
 
@@ -140,69 +140,19 @@ impl RotationSeq {
     }
 
     pub fn count_zeros(&self) -> i32 {
-        let mut count: i32 = 0;
-        let mut position: i32 = 50;
+        let mut dial = Dial::new(50);
         for rotation in &self.rotations {
-            position = match rotation {
-                Rotation {
-                    direction: Direction::Left,
-                    distance,
-                } => (position - distance) % 100,
-                Rotation {
-                    direction: Direction::Right,
-                    distance,
-                } => (position + distance) % 100,
-            };
-            if position == 0 {
-                count += 1;
-            };
+            dial.rotate(rotation);
         }
-        count
+        dial.zero_landed_count
     }
 
     pub fn count_all_zeros(&self) -> i32 {
-        let mut count: i32 = 0;
-        let mut position: i32 = 50;
-        let mut displacement: i32;
+        let mut dial = Dial::new(50);
         for rotation in &self.rotations {
-            match rotation {
-                Rotation {
-                    direction: Direction::Left,
-                    distance,
-                } => {
-                    displacement = position - distance;
-                    if position == 0 {
-                        position = displacement % 100;
-                        if position < 0 {
-                            position += 100;
-                        };
-                        count += -displacement / 100
-                    } else {
-                        position = displacement % 100;
-                        if position < 0 {
-                            count += -displacement / 100 + 1;
-                            position += 100;
-                        } else if position == 0 {
-                            count += 1;
-                        };
-                    };
-                }
-                Rotation {
-                    direction: Direction::Right,
-                    distance,
-                } => {
-                    displacement = position + distance;
-                    position = displacement % 100;
-                    count += displacement / 100;
-                }
-            };
-
-            // println!(
-            //     "rotation: {:?}, count: {}, position: {}",
-            //     rotation, count, position
-            // );
+            dial.rotate(rotation);
         }
-        count
+        dial.zero_landed_count + dial.zero_passed_count
     }
 }
 
