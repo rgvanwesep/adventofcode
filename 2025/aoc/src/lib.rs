@@ -77,27 +77,19 @@ impl RotationSeq {
     pub fn count_all_zeros(&self) -> i32 {
         let mut count: i32 = 0;
         let mut position: i32 = 50;
-        let mut displacement: i32;
-        let mut quotient: i32;
         for rotation in &self.rotations {
-            displacement = match rotation {
+            position = match rotation {
                 Rotation {
                     direction: Direction::Left,
                     distance,
-                } => position - distance,
+                } => (position - distance) % 100,
                 Rotation {
                     direction: Direction::Right,
                     distance,
-                } => position + distance,
+                } => (position + distance) % 100,
             };
-
-            quotient = displacement / 100;
-            if displacement < 0 {
-                count += -quotient + 1;
-                position = displacement % 100 + 100;
-            } else {
-                count += quotient;
-                position = displacement % 100;
+            if position == 0 {
+                count += 1;
             };
         }
         count
@@ -229,11 +221,98 @@ mod tests {
     }
 
     #[test]
-    fn count_all_zeros() {
+    fn count_all_zeros_one() {
+        let input = vec!["L68"];
+        let rotation_seq = RotationSeq::build(input).unwrap();
+        assert_eq!(rotation_seq.count_all_zeros(), 1);
+    }
+
+    #[test]
+    fn count_all_zeros_two() {
+        let input = vec!["L68", "L30"];
+        let rotation_seq = RotationSeq::build(input).unwrap();
+        assert_eq!(rotation_seq.count_all_zeros(), 1);
+    }
+
+    #[test]
+    fn count_all_zeros_three() {
+        let input = vec!["L68", "L30", "R48"];
+        let rotation_seq = RotationSeq::build(input).unwrap();
+        assert_eq!(rotation_seq.count_all_zeros(), 2);
+    }
+
+    #[test]
+    fn count_all_zeros_four() {
+        let input = vec!["L68", "L30", "R48", "L5"];
+        let rotation_seq = RotationSeq::build(input).unwrap();
+        assert_eq!(rotation_seq.count_all_zeros(), 2);
+    }
+
+    #[test]
+    fn count_all_zeros_five() {
+        let input = vec![
+            "L68", "L30", "R48", "L5", "R60",
+        ];
+        let rotation_seq = RotationSeq::build(input).unwrap();
+        assert_eq!(rotation_seq.count_all_zeros(), 3);
+    }
+
+    #[test]
+    fn count_all_zeros_six() {
+        let input = vec![
+            "L68", "L30", "R48", "L5", "R60", "L55",
+        ];
+        let rotation_seq = RotationSeq::build(input).unwrap();
+        assert_eq!(rotation_seq.count_all_zeros(), 4);
+    }
+
+    #[test]
+    fn count_all_zeros_seven() {
+        let input = vec![
+            "L68", "L30", "R48", "L5", "R60", "L55", "L1",
+        ];
+        let rotation_seq = RotationSeq::build(input).unwrap();
+        assert_eq!(rotation_seq.count_all_zeros(), 4);
+    }
+
+    #[test]
+    fn count_all_zeros_eight() {
+        let input = vec![
+            "L68", "L30", "R48", "L5", "R60", "L55", "L1", "L99",
+        ];
+        let rotation_seq = RotationSeq::build(input).unwrap();
+        assert_eq!(rotation_seq.count_all_zeros(), 5);
+    }
+
+    #[test]
+    fn count_all_zeros_nine() {
+        let input = vec![
+            "L68", "L30", "R48", "L5", "R60", "L55", "L1", "L99", "R14",
+        ];
+        let rotation_seq = RotationSeq::build(input).unwrap();
+        assert_eq!(rotation_seq.count_all_zeros(), 6);
+    }
+
+    #[test]
+    fn count_all_zeros_ten() {
         let input = vec![
             "L68", "L30", "R48", "L5", "R60", "L55", "L1", "L99", "R14", "L82",
         ];
         let rotation_seq = RotationSeq::build(input).unwrap();
         assert_eq!(rotation_seq.count_all_zeros(), 6);
+    }
+
+    #[test]
+    fn count_all_zeros_right_big() {
+        let input = vec!["R1000"];
+        let rotation_seq = RotationSeq::build(input).unwrap();
+        assert_eq!(rotation_seq.count_all_zeros(), 10);
+    }
+
+    #[test]
+    fn count_all_zeros_left_big() {
+        let input = vec!["L1000"];
+        let rotation_seq = RotationSeq::build(input).unwrap();
+        assert_eq!(rotation_seq.count_all_zeros(), 10);
     }
 }
