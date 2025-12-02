@@ -434,91 +434,231 @@ mod tests {
     fn rotate_left_from_zero() {
         let mut dial = Dial::new(0);
         dial.rotate_left(10);
-        assert_eq!(dial, Dial{position: 90, zero_landed_count: 0, zero_passed_count: 0});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 90,
+                zero_landed_count: 0,
+                zero_passed_count: 0
+            }
+        );
 
         let mut dial = Dial::new(0);
         dial.rotate_left(100);
-        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 0});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 0,
+                zero_landed_count: 1,
+                zero_passed_count: 0
+            }
+        );
 
         let mut dial = Dial::new(0);
         dial.rotate_left(110);
-        assert_eq!(dial, Dial{position: 90, zero_landed_count: 0, zero_passed_count: 1});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 90,
+                zero_landed_count: 0,
+                zero_passed_count: 1
+            }
+        );
 
         let mut dial = Dial::new(0);
         dial.rotate_left(200);
-        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 1});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 0,
+                zero_landed_count: 1,
+                zero_passed_count: 1
+            }
+        );
 
         let mut dial = Dial::new(0);
         dial.rotate_left(210);
-        assert_eq!(dial, Dial{position: 90, zero_landed_count: 0, zero_passed_count: 2});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 90,
+                zero_landed_count: 0,
+                zero_passed_count: 2
+            }
+        );
     }
 
     #[test]
     fn rotate_left_from_nonzero() {
         let mut dial = Dial::new(50);
         dial.rotate_left(10);
-        assert_eq!(dial, Dial{position: 40, zero_landed_count: 0, zero_passed_count: 0});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 40,
+                zero_landed_count: 0,
+                zero_passed_count: 0
+            }
+        );
 
         let mut dial = Dial::new(50);
         dial.rotate_left(50);
-        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 0});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 0,
+                zero_landed_count: 1,
+                zero_passed_count: 0
+            }
+        );
 
         let mut dial = Dial::new(50);
         dial.rotate_left(60);
-        assert_eq!(dial, Dial{position: 90, zero_landed_count: 0, zero_passed_count: 1});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 90,
+                zero_landed_count: 0,
+                zero_passed_count: 1
+            }
+        );
 
         let mut dial = Dial::new(50);
         dial.rotate_left(150);
-        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 1});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 0,
+                zero_landed_count: 1,
+                zero_passed_count: 1
+            }
+        );
 
         let mut dial = Dial::new(50);
         dial.rotate_left(160);
-        assert_eq!(dial, Dial{position: 90, zero_landed_count: 0, zero_passed_count: 2});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 90,
+                zero_landed_count: 0,
+                zero_passed_count: 2
+            }
+        );
     }
 
     #[test]
     fn rotate_right_from_zero() {
         let mut dial = Dial::new(0);
         dial.rotate_right(10);
-        assert_eq!(dial, Dial{position: 10, zero_landed_count: 0, zero_passed_count: 0});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 10,
+                zero_landed_count: 0,
+                zero_passed_count: 0
+            }
+        );
 
         let mut dial = Dial::new(0);
         dial.rotate_right(100);
-        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 0});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 0,
+                zero_landed_count: 1,
+                zero_passed_count: 0
+            }
+        );
 
         let mut dial = Dial::new(0);
         dial.rotate_right(110);
-        assert_eq!(dial, Dial{position: 10, zero_landed_count: 0, zero_passed_count: 1});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 10,
+                zero_landed_count: 0,
+                zero_passed_count: 1
+            }
+        );
 
         let mut dial = Dial::new(0);
         dial.rotate_right(200);
-        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 1});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 0,
+                zero_landed_count: 1,
+                zero_passed_count: 1
+            }
+        );
 
         let mut dial = Dial::new(0);
         dial.rotate_right(210);
-        assert_eq!(dial, Dial{position: 10, zero_landed_count: 0, zero_passed_count: 2});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 10,
+                zero_landed_count: 0,
+                zero_passed_count: 2
+            }
+        );
     }
 
     #[test]
     fn rotate_right_from_nonzero() {
         let mut dial = Dial::new(50);
         dial.rotate_right(10);
-        assert_eq!(dial, Dial{position: 60, zero_landed_count: 0, zero_passed_count: 0});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 60,
+                zero_landed_count: 0,
+                zero_passed_count: 0
+            }
+        );
 
         let mut dial = Dial::new(50);
         dial.rotate_right(50);
-        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 0});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 0,
+                zero_landed_count: 1,
+                zero_passed_count: 0
+            }
+        );
 
         let mut dial = Dial::new(50);
         dial.rotate_right(60);
-        assert_eq!(dial, Dial{position: 10, zero_landed_count: 0, zero_passed_count: 1});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 10,
+                zero_landed_count: 0,
+                zero_passed_count: 1
+            }
+        );
 
         let mut dial = Dial::new(50);
         dial.rotate_right(150);
-        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 1});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 0,
+                zero_landed_count: 1,
+                zero_passed_count: 1
+            }
+        );
 
         let mut dial = Dial::new(50);
         dial.rotate_right(160);
-        assert_eq!(dial, Dial{position: 10, zero_landed_count: 0, zero_passed_count: 2});
+        assert_eq!(
+            dial,
+            Dial {
+                position: 10,
+                zero_landed_count: 0,
+                zero_passed_count: 2
+            }
+        );
     }
 }
