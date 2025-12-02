@@ -38,6 +38,92 @@ impl Rotation {
 }
 
 #[derive(Debug, PartialEq)]
+struct Dial {
+    position: i32,
+    zero_landed_count: i32,
+    zero_passed_count: i32,
+}
+
+impl Dial {
+    fn new(start: i32) -> Dial {
+        Dial {
+            position: start,
+            zero_landed_count: 0,
+            zero_passed_count: 0,
+        }
+    }
+
+    fn rotate(&mut self, r: Rotation) {
+        match r {
+            Rotation {
+                direction: Direction::Left,
+                distance,
+            } => self.rotate_left(distance),
+            Rotation {
+                direction: Direction::Right,
+                distance,
+            } => self.rotate_right(distance),
+        }
+    }
+
+    fn rotate_left(&mut self, distance: i32) {
+        if self.position == 0 {
+            if distance % 100 == 0 {
+                self.position = 0;
+                self.zero_landed_count += 1;
+                self.zero_passed_count += distance / 100 - 1;
+            } else {
+                self.position = 100 - distance % 100;
+                self.zero_passed_count += distance / 100;
+            }
+        } else if distance > self.position {
+            let difference = distance - self.position;
+            if difference % 100 == 0 {
+                self.position = 0;
+                self.zero_landed_count += 1;
+                self.zero_passed_count += difference / 100;
+            } else {
+                self.position = 100 - difference % 100;
+                self.zero_passed_count += difference / 100 + 1;
+            }
+        } else if distance == self.position {
+            self.position = 0;
+            self.zero_landed_count += 1;
+        } else {
+            self.position -= distance;
+        }
+    }
+
+    fn rotate_right(&mut self, distance: i32) {
+        if self.position == 0 {
+            if distance % 100 == 0 {
+                self.position = 0;
+                self.zero_landed_count += 1;
+                self.zero_passed_count += distance / 100 - 1;
+            } else {
+                self.position = distance % 100;
+                self.zero_passed_count += distance / 100;
+            }
+        } else if distance > 100 - self.position {
+            let difference = distance - 100 + self.position;
+            if difference % 100 == 0 {
+                self.position = 0;
+                self.zero_landed_count += 1;
+                self.zero_passed_count += difference / 100;
+            } else {
+                self.position = difference % 100;
+                self.zero_passed_count += difference / 100 + 1;
+            }
+        } else if distance == 100 - self.position {
+            self.position = 0;
+            self.zero_landed_count += 1;
+        } else {
+            self.position += distance;
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct RotationSeq {
     rotations: Vec<Rotation>,
 }
@@ -53,8 +139,8 @@ impl RotationSeq {
         Ok(RotationSeq { rotations })
     }
 
-    pub fn count_zeros(&self) -> u32 {
-        let mut count: u32 = 0;
+    pub fn count_zeros(&self) -> i32 {
+        let mut count: i32 = 0;
         let mut position: i32 = 50;
         for rotation in &self.rotations {
             position = match rotation {
@@ -342,5 +428,97 @@ mod tests {
         let input = vec!["R50", "L1000"];
         let rotation_seq = RotationSeq::build(input).unwrap();
         assert_eq!(rotation_seq.count_all_zeros(), 11);
+    }
+
+    #[test]
+    fn rotate_left_from_zero() {
+        let mut dial = Dial::new(0);
+        dial.rotate_left(10);
+        assert_eq!(dial, Dial{position: 90, zero_landed_count: 0, zero_passed_count: 0});
+
+        let mut dial = Dial::new(0);
+        dial.rotate_left(100);
+        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 0});
+
+        let mut dial = Dial::new(0);
+        dial.rotate_left(110);
+        assert_eq!(dial, Dial{position: 90, zero_landed_count: 0, zero_passed_count: 1});
+
+        let mut dial = Dial::new(0);
+        dial.rotate_left(200);
+        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 1});
+
+        let mut dial = Dial::new(0);
+        dial.rotate_left(210);
+        assert_eq!(dial, Dial{position: 90, zero_landed_count: 0, zero_passed_count: 2});
+    }
+
+    #[test]
+    fn rotate_left_from_nonzero() {
+        let mut dial = Dial::new(50);
+        dial.rotate_left(10);
+        assert_eq!(dial, Dial{position: 40, zero_landed_count: 0, zero_passed_count: 0});
+
+        let mut dial = Dial::new(50);
+        dial.rotate_left(50);
+        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 0});
+
+        let mut dial = Dial::new(50);
+        dial.rotate_left(60);
+        assert_eq!(dial, Dial{position: 90, zero_landed_count: 0, zero_passed_count: 1});
+
+        let mut dial = Dial::new(50);
+        dial.rotate_left(150);
+        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 1});
+
+        let mut dial = Dial::new(50);
+        dial.rotate_left(160);
+        assert_eq!(dial, Dial{position: 90, zero_landed_count: 0, zero_passed_count: 2});
+    }
+
+    #[test]
+    fn rotate_right_from_zero() {
+        let mut dial = Dial::new(0);
+        dial.rotate_right(10);
+        assert_eq!(dial, Dial{position: 10, zero_landed_count: 0, zero_passed_count: 0});
+
+        let mut dial = Dial::new(0);
+        dial.rotate_right(100);
+        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 0});
+
+        let mut dial = Dial::new(0);
+        dial.rotate_right(110);
+        assert_eq!(dial, Dial{position: 10, zero_landed_count: 0, zero_passed_count: 1});
+
+        let mut dial = Dial::new(0);
+        dial.rotate_right(200);
+        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 1});
+
+        let mut dial = Dial::new(0);
+        dial.rotate_right(210);
+        assert_eq!(dial, Dial{position: 10, zero_landed_count: 0, zero_passed_count: 2});
+    }
+
+    #[test]
+    fn rotate_right_from_nonzero() {
+        let mut dial = Dial::new(50);
+        dial.rotate_right(10);
+        assert_eq!(dial, Dial{position: 60, zero_landed_count: 0, zero_passed_count: 0});
+
+        let mut dial = Dial::new(50);
+        dial.rotate_right(50);
+        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 0});
+
+        let mut dial = Dial::new(50);
+        dial.rotate_right(60);
+        assert_eq!(dial, Dial{position: 10, zero_landed_count: 0, zero_passed_count: 1});
+
+        let mut dial = Dial::new(50);
+        dial.rotate_right(150);
+        assert_eq!(dial, Dial{position: 0, zero_landed_count: 1, zero_passed_count: 1});
+
+        let mut dial = Dial::new(50);
+        dial.rotate_right(160);
+        assert_eq!(dial, Dial{position: 10, zero_landed_count: 0, zero_passed_count: 2});
     }
 }
