@@ -56,6 +56,7 @@ mod tests {
         assert!(!is_invalid(111));
     }
 
+    #[test]
     fn is_invalid_large_even_digit() {
         assert!(is_invalid(1188511885));
     }
