@@ -2,7 +2,10 @@ use std::ops::Range;
 
 pub fn sum_invalid_ids(input: &str) -> i64 {
     let ranges = input.split(",").map(|x| {
-        let mut bounds: Vec<i64> = x.split("-").map(|y: &str| -> i64 { y.parse().unwrap() }).collect();
+        let mut bounds: Vec<i64> = x
+            .split("-")
+            .map(|y: &str| -> i64 { y.parse().unwrap() })
+            .collect();
         bounds[0]..bounds[1] + 1
     });
     let mut invalid_ids: Vec<i64> = Vec::new();
