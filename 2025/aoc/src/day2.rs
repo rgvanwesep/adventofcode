@@ -26,7 +26,7 @@ fn find_invalid_ids(r: Range<i64>) -> Vec<i64> {
 }
 
 fn is_invalid(id: i64) -> bool {
-    let n_digits: u32 = id.ilog10()+1;
+    let n_digits: u32 = id.ilog10() + 1;
     if n_digits % 2 == 0 {
         let base: i64 = 10;
         let divisor = base.pow(n_digits / 2);
