@@ -38,7 +38,17 @@ fn main() -> Result<(), Box<dyn Error>> {
             Ok(())
         }
         (2, 1) => {
-            println!("Result: {}", day2::sum_invalid_ids(inputs[0].as_str()));
+            println!(
+                "Result: {}",
+                day2::sum_invalid_ids(inputs[0].as_str(), &day2::is_invalid)
+            );
+            Ok(())
+        }
+        (2, 2) => {
+            println!(
+                "Result: {}",
+                day2::sum_invalid_ids(inputs[0].as_str(), &day2::is_invalid_all_repeats)
+            );
             Ok(())
         }
         _ => Err(format!("No match for Day {}, Part {}", args.day, args.part).into()),
