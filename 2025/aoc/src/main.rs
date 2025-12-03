@@ -1,4 +1,5 @@
-use aoc::RotationSeq;
+use aoc::day1::RotationSeq;
+use aoc::day2;
 use clap::Parser;
 use std::error::Error;
 use std::io;
@@ -33,6 +34,20 @@ fn main() -> Result<(), Box<dyn Error>> {
             println!(
                 "Result: {}",
                 RotationSeq::build(inputs.iter().map(String::as_str).collect())?.count_all_zeros()
+            );
+            Ok(())
+        }
+        (2, 1) => {
+            println!(
+                "Result: {}",
+                day2::sum_invalid_ids(inputs[0].as_str(), &day2::is_invalid)
+            );
+            Ok(())
+        }
+        (2, 2) => {
+            println!(
+                "Result: {}",
+                day2::sum_invalid_ids(inputs[0].as_str(), &day2::is_invalid_all_repeats)
             );
             Ok(())
         }

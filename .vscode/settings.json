@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "/workspaces/adventofcode/2025/aoc/Cargo.toml"
+    ]
+}
