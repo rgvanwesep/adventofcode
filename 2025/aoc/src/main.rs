@@ -54,7 +54,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         (3, 1) => {
             println!(
                 "Result: {}",
-                day3::sum_joltage(inputs.iter().map(String::as_str).collect())
+                day3::sum_joltage(inputs.iter().map(String::as_str).collect(), 2)
+            );
+            Ok(())
+        }
+        (3, 2) => {
+            println!(
+                "Result: {}",
+                day3::sum_joltage(inputs.iter().map(String::as_str).collect(), 12)
             );
             Ok(())
         }
