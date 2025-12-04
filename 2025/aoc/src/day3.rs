@@ -1,36 +1,33 @@
-pub fn sum_joltage(inputs: Vec<&str>, ndigits: usize) -> u64 {
+pub fn sum_joltage(inputs: Vec<&str>) -> i64 {
     let mut sum = 0;
     for input in inputs {
-        sum += find_largest_joltage(input, ndigits)
+        sum += find_largest_joltage(input)
     }
     sum
 }
 
-fn find_largest_joltage(input: &str, ndigits: usize) -> u64 {
-    let digits: Vec<u8> = input.as_bytes().iter().map(|x| x - '0' as u8).collect();
-    let len = digits.len();
-    let mut maxes = vec![0; len];
-    let mut next_max_indices = vec![len; len - 1];
-    let mut current_max_index = len - 1;
-
-    for i in 0..ndigits {
-        maxes[len - i - 1] = digits[len - i - 1];
-    }
-
-    for i in (0..len - 1).rev() {
-        next_max_indices[i] = current_max_index;
-        if digits[i] >= maxes[i + 1] {
-            maxes[i] = digits[i];
-            current_max_index = i;
+fn find_largest_joltage(input: &str) -> i64 {
+    let bytes = input.as_bytes();
+    let len = bytes.len();
+    let mut max_after = vec![0; len - 1];
+    max_after[len - 2] = bytes[len - 1];
+    let mut max = bytes[len - 2];
+    let mut max_index = len - 2;
+    for i in (0..len - 2).rev() {
+        if bytes[i] > max {
+            max = bytes[i];
+            max_index = i;
+        } else if bytes[i] == max {
+            max_index = i;
+        }
+        if bytes[i + 1] > max_after[i + 1] {
+            max_after[i] = bytes[i + 1];
+        } else {
+            max_after[i] = max_after[i + 1];
         }
     }
-    let mut result = maxes[0] as u64;
-    let mut i = 0;
-    for _ in 0..ndigits - 1 {
-        result = result * 10 + maxes[next_max_indices[i]] as u64;
-        i = next_max_indices[i];
-    }
-    result
+    max -= '0' as u8;
+    (max * 10 + max_after[max_index] - '0' as u8).into()
 }
 
 #[cfg(test)]
@@ -38,23 +35,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sum_joltage_example_input_two() {
+    fn sum_joltage_example_input() {
         let inputs = vec![
             "987654321111111",
             "811111111111119",
             "234234234234278",
             "818181911112111",
         ];
-        assert_eq!(sum_joltage(inputs, 2), 357);
+        assert_eq!(sum_joltage(inputs), 357);
     }
 
     #[test]
-    fn find_largest_joltage_small_two() {
-        assert_eq!(find_largest_joltage("12", 2), 12);
-    }
-
-    #[test]
-    fn find_largest_joltage_small_three() {
-        assert_eq!(find_largest_joltage("123", 3), 123);
+    fn find_largest_joltage_small() {
+        assert_eq!(find_largest_joltage("12"), 12);
     }
 }
