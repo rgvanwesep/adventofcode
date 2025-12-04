@@ -1,44 +1,34 @@
-pub fn sum_joltage(inputs: Vec<&str>, digits: usize) -> u64 {
+pub fn sum_joltage(inputs: Vec<&str>, ndigits: usize) -> u64 {
     let mut sum = 0;
     for input in inputs {
-        sum += find_largest_joltage(input, digits)
+        sum += find_largest_joltage(input, ndigits)
     }
     sum
 }
 
-fn find_largest_joltage(input: &str, digits: usize) -> u64 {
-    let bytes = input.as_bytes();
-    let len = bytes.len();
-    let mut max_after = vec![0; len - 1];
-    let mut max_indices = vec![len; len - 1];
-    for i in 0..digits - 1 {
-        max_after[len - i - 2] = bytes[len - i - 1];
-        max_indices[len - i - 2] = len - i - 1;
+fn find_largest_joltage(input: &str, ndigits: usize) -> u64 {
+    let digits: Vec<u8> = input.as_bytes().iter().map(|x| x - '0' as u8).collect();
+    let len = digits.len();
+    let mut maxes = vec![0; len];
+    let mut next_max_indices = vec![len; len - 1];
+    let mut current_max_index = len - 1;
+
+    for i in 0..ndigits {
+        maxes[len - i - 1] = digits[len - i - 1];
     }
-    let mut max = bytes[len - 2];
-    let mut max_index = len - 2;
-    for i in (0..len - 2).rev() {
-        if bytes[i] > max {
-            max = bytes[i];
-            max_index = i;
-        } else if bytes[i] == max {
-            max_index = i;
-        }
-        if bytes[i + 1] > max_after[i + 1] {
-            max_after[i] = bytes[i + 1];
-            max_indices[i] = i + 1;
-        } else {
-            max_after[i] = max_after[i + 1];
-            max_indices[i] = max_indices[i + 1];
+
+    for i in (0..len - 1).rev() {
+        next_max_indices[i] = current_max_index;
+        if digits[i] >= maxes[i + 1] {
+            maxes[i] = digits[i];
+            current_max_index = i;
         }
     }
-    let mut result = (max - '0' as u8).into();
-    let mut next_max: u64 = (max_after[max_index] - '0' as u8).into();
-    result = result * 10 + next_max;
-    for i in 0..digits - 2 {
-        next_max = (max_after[max_indices[max_index]] - '0' as u8).into();
-        result = result * 10 + next_max;
-        max_index = max_indices[max_index];
+    let mut result = maxes[0] as u64;
+    let mut i = 0;
+    for _ in 0..ndigits - 1 {
+        result = result * 10 + maxes[next_max_indices[i]] as u64;
+        i = next_max_indices[i];
     }
     result
 }
