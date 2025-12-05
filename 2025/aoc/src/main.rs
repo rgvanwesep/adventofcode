@@ -72,6 +72,13 @@ fn main() -> Result<(), Box<dyn Error>> {
             );
             Ok(())
         }
+        (4, 2) => {
+            println!(
+                "Result: {}",
+                day4::count_removable_rolls(inputs.iter().map(String::as_str).collect())
+            );
+            Ok(())
+        }
         _ => Err(format!("No match for Day {}, Part {}", args.day, args.part).into()),
     }
 }

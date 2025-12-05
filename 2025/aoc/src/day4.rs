@@ -3,9 +3,29 @@ use ndarray::Array2;
 const ROLL: u8 = b'@';
 const EMPTY: u8 = b'.';
 
-pub fn count_rolls(inputs: Vec<&str>) -> u32 {
+pub fn count_rolls(inputs: Vec<&str>) -> usize {
     let (nrows, ncols, grid) = build_grid(inputs);
+    find_removable(nrows, ncols, &grid).len()
+}
+
+pub fn count_removable_rolls(inputs: Vec<&str>) -> usize {
+    let (nrows, ncols, mut grid) = build_grid(inputs);
     let mut count = 0;
+    loop {
+        let pairs = find_removable(nrows, ncols, &grid);
+        if pairs.len() == 0 {
+            break;
+        }
+        count += pairs.len();
+        for (i, j) in pairs {
+            grid[[i, j]] = EMPTY;
+        }
+    }
+    count
+}
+
+fn find_removable(nrows: usize, ncols: usize, grid: &Array2<u8>) -> Vec<(usize, usize)> {
+    let mut pairs = Vec::new();
     let mut nneighbors: u8;
     for i in 0..nrows {
         for j in 0..ncols {
@@ -19,12 +39,12 @@ pub fn count_rolls(inputs: Vec<&str>) -> u32 {
                     }
                 }
                 if nneighbors < 4 {
-                    count += 1
+                    pairs.push((i + 1, j + 1))
                 }
             }
         }
     }
-    count
+    pairs
 }
 
 fn build_grid(inputs: Vec<&str>) -> (usize, usize, Array2<u8>) {
@@ -62,6 +82,23 @@ mod tests {
             "@.@.@@@.@.",
         ];
         assert_eq!(count_rolls(inputs), 13);
+    }
+
+    #[test]
+    fn count_removable_rolls_example() {
+        let inputs = vec![
+            "..@@.@@@@.",
+            "@@@.@.@.@@",
+            "@@@@@.@.@@",
+            "@.@@@@..@.",
+            "@@.@@@@.@@",
+            ".@@@@@@@.@",
+            ".@.@.@.@@@",
+            "@.@@@.@@@@",
+            ".@@@@@@@@.",
+            "@.@.@@@.@.",
+        ];
+        assert_eq!(count_removable_rolls(inputs), 43);
     }
 
     #[test]
