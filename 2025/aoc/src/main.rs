@@ -1,5 +1,5 @@
 use aoc::day1::RotationSeq;
-use aoc::{day2, day3, day4};
+use aoc::{day2, day3, day4, day5};
 use clap::Parser;
 use std::error::Error;
 use std::io;
@@ -76,6 +76,20 @@ fn main() -> Result<(), Box<dyn Error>> {
             println!(
                 "Result: {}",
                 day4::count_removable_rolls(inputs.iter().map(String::as_str).collect())
+            );
+            Ok(())
+        }
+        (5, 1) => {
+            println!(
+                "Result: {}",
+                day5::count_fresh_ids(inputs.iter().map(String::as_str).collect())
+            );
+            Ok(())
+        }
+        (5, 2) => {
+            println!(
+                "Result: {}",
+                day5::count_total_fresh_ids(inputs.iter().map(String::as_str).collect())
             );
             Ok(())
         }
