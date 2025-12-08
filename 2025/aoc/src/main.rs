@@ -100,6 +100,13 @@ fn main() -> Result<(), Box<dyn Error>> {
             );
             Ok(())
         }
+        (6, 2) => {
+            println!(
+                "Result: {}",
+                day6::sum_results_cepha(inputs.iter().map(String::as_str).collect())
+            );
+            Ok(())
+        }
         _ => Err(format!("No match for Day {}, Part {}", args.day, args.part).into()),
     }
 }
