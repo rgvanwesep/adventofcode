@@ -1,5 +1,5 @@
 use aoc::day1::RotationSeq;
-use aoc::{day2, day3, day4, day5, day6};
+use aoc::{day2, day3, day4, day5, day6, day7};
 use clap::Parser;
 use std::error::Error;
 use std::io;
@@ -104,6 +104,20 @@ fn main() -> Result<(), Box<dyn Error>> {
             println!(
                 "Result: {}",
                 day6::sum_results_cepha(inputs.iter().map(String::as_str).collect())
+            );
+            Ok(())
+        }
+        (7, 1) => {
+            println!(
+                "Result: {}",
+                day7::count_splits(inputs.iter().map(String::as_str).collect())
+            );
+            Ok(())
+        }
+        (7, 2) => {
+            println!(
+                "Result: {}",
+                day7::count_paths(inputs.iter().map(String::as_str).collect())
             );
             Ok(())
         }
