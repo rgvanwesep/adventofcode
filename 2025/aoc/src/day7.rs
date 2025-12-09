@@ -3,11 +3,11 @@ const SPLITTER: u8 = b'^';
 const BEAM: u8 = b'|';
 
 pub fn count_splits(inputs: Vec<&str>) -> u32 {
-    Tree::build(inputs).splitter_count
+    Graph::build(inputs).splitter_count
 }
 
 pub fn count_paths(inputs: Vec<&str>) -> u32 {
-    Tree::build(inputs).count_paths()
+    Graph::build(inputs).count_paths()
 }
 
 #[derive(Default)]
@@ -16,14 +16,14 @@ struct Node {
     neighbors: Vec<(usize, usize)>,
 }
 
-struct Tree {
+struct Graph {
     head: Option<(usize, usize)>,
     nodes: ndarray::Array2<Node>,
     splitter_count: u32,
 }
 
-impl Tree {
-    fn build(inputs: Vec<&str>) -> Tree {
+impl Graph {
+    fn build(inputs: Vec<&str>) -> Graph {
         let mut splitter_count = 0;
 
         let nrows = inputs.len();
@@ -64,7 +64,7 @@ impl Tree {
             }
         }
 
-        Tree {
+        Graph {
             head,
             nodes,
             splitter_count,
