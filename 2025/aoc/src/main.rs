@@ -1,5 +1,5 @@
 use aoc::day1::RotationSeq;
-use aoc::{day2, day3, day4, day5, day6, day7};
+use aoc::{day2, day3, day4, day5, day6, day7, day8};
 use clap::Parser;
 use std::error::Error;
 use std::io;
@@ -118,6 +118,13 @@ fn main() -> Result<(), Box<dyn Error>> {
             println!(
                 "Result: {}",
                 day7::count_paths(inputs.iter().map(String::as_str).collect())
+            );
+            Ok(())
+        }
+        (8, 1) => {
+            println!(
+                "Result: {}",
+                day8::multiply_circuit_sizes(inputs.iter().map(String::as_str).collect())
             );
             Ok(())
         }
