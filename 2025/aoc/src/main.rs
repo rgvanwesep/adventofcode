@@ -124,7 +124,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         (8, 1) => {
             println!(
                 "Result: {}",
-                day8::multiply_circuit_sizes(inputs.iter().map(String::as_str).collect())
+                day8::multiply_circuit_sizes(inputs.iter().map(String::as_str).collect(), 1000)
             );
             Ok(())
         }

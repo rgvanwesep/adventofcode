@@ -1,5 +1,56 @@
-pub fn multiply_circuit_sizes(inputs: Vec<&str>) -> u32 {
-    0
+use petgraph::{algo::tarjan_scc, graph::UnGraph};
+
+pub fn multiply_circuit_sizes(inputs: Vec<&str>, num_connections: usize) -> usize {
+    let mut points = Vec::<Point3d>::new();
+    let mut distances = Vec::<(usize, usize, u64)>::new();
+    for input in inputs {
+        points.push(Point3d::build(
+            input.split(",").map(|s| s.parse().unwrap()).collect(),
+        ));
+    }
+    for (i, pi) in points.iter().enumerate() {
+        for (j, pj) in points[0..i].iter().enumerate() {
+            distances.push((i, j, pi.distance_squared(pj)));
+        }
+    }
+    distances.sort_by_key(|&x| x.2);
+    let graph = UnGraph::<u32, ()>::from_edges(
+        distances[0..num_connections]
+            .iter()
+            .map(|&(i, j, _)| (i as u32, j as u32)),
+    );
+    let mut comps_sizes: Vec<usize> = tarjan_scc(&graph).iter().map(|comp| comp.len()).collect();
+    comps_sizes.sort();
+    comps_sizes.reverse();
+    comps_sizes[0..3].iter().product()
+}
+
+struct Point3d {
+    x: u64,
+    y: u64,
+    z: u64,
+}
+
+impl Point3d {
+    fn build(coords: Vec<u64>) -> Point3d {
+        Point3d {
+            x: coords[0],
+            y: coords[1],
+            z: coords[2],
+        }
+    }
+
+    fn distance_squared(&self, other: &Point3d) -> u64 {
+        let mut d2 = 0;
+        for pair in [(self.x, other.x), (self.y, other.y), (self.z, other.z)] {
+            if pair.0 > pair.1 {
+                d2 += (pair.0 - pair.1).pow(2);
+            } else {
+                d2 += (pair.1 - pair.0).pow(2);
+            }
+        }
+        d2
+    }
 }
 
 #[cfg(test)]
@@ -30,6 +81,6 @@ mod tests {
             "984,92,344",
             "425,690,689",
         ];
-        assert_eq!(multiply_circuit_sizes(inputs), 40);
+        assert_eq!(multiply_circuit_sizes(inputs, 10), 40);
     }
 }
