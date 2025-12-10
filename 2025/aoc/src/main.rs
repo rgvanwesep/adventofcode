@@ -1,5 +1,5 @@
 use aoc::day1::RotationSeq;
-use aoc::{day2, day3, day4, day5, day6, day7, day8};
+use aoc::{day2, day3, day4, day5, day6, day7, day8, day9};
 use clap::Parser;
 use std::error::Error;
 use std::io;
@@ -132,6 +132,20 @@ fn main() -> Result<(), Box<dyn Error>> {
             println!(
                 "Result: {}",
                 day8::multiply_final_x_coords(inputs.iter().map(String::as_str).collect())
+            );
+            Ok(())
+        }
+        (9, 1) => {
+            println!(
+                "Result: {}",
+                day9::largest_area(inputs.iter().map(String::as_str).collect())
+            );
+            Ok(())
+        }
+        (9, 2) => {
+            println!(
+                "Result: {}",
+                day9::largest_area_green_red(inputs.iter().map(String::as_str).collect())
             );
             Ok(())
         }
