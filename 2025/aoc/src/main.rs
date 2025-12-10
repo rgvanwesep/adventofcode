@@ -128,6 +128,13 @@ fn main() -> Result<(), Box<dyn Error>> {
             );
             Ok(())
         }
+        (8, 2) => {
+            println!(
+                "Result: {}",
+                day8::multiply_final_x_coords(inputs.iter().map(String::as_str).collect())
+            );
+            Ok(())
+        }
         _ => Err(format!("No match for Day {}, Part {}", args.day, args.part).into()),
     }
 }
