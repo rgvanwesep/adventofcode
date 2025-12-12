@@ -3,6 +3,10 @@ mod polygon;
 
 use polygon::Polygon;
 
+const NEUTRAL: u8 = b'.';
+const RED: u8 = b'#';
+const GREEN: u8 = b'X';
+
 pub fn largest_area(inputs: Vec<&str>) -> usize {
     let points: Vec<Point2d> = inputs
         .iter()
