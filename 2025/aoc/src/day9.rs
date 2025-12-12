@@ -1,3 +1,4 @@
+mod image;
 mod polygon;
 
 use polygon::Polygon;
