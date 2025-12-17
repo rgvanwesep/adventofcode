@@ -1,6 +1,4 @@
-mod polygon;
-
-use polygon::Polygon;
+mod image;
 
 pub fn largest_area(inputs: Vec<&str>) -> usize {
     let points: Vec<Point2d> = inputs
@@ -21,28 +19,7 @@ pub fn largest_area(inputs: Vec<&str>) -> usize {
 }
 
 pub fn largest_area_green_red(inputs: Vec<&str>) -> i64 {
-    let poly = Polygon::from_strings(inputs);
-    let red_tiles = poly.vertices();
-    let mut largest = 0;
-    let mut m1;
-    let mut m2;
-    let mut area;
-    for (i, &ri) in red_tiles.iter().enumerate() {
-        for &rj in &red_tiles[0..i] {
-            area = ((ri.0 - rj.0).abs() + 1) * ((ri.1 - rj.1).abs() + 1);
-            if area > largest {
-                (m1, m2) = missing_corners(ri, rj);
-                if poly.contains(m1) && poly.contains(m2) {
-                    largest = area
-                }
-            }
-        }
-    }
-    largest
-}
-
-fn missing_corners(p1: (i64, i64), p2: (i64, i64)) -> ((i64, i64), (i64, i64)) {
-    ((p1.0, p2.1), (p2.0, p1.1))
+    0
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
