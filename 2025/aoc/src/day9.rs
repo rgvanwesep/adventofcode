@@ -1,6 +1,6 @@
-use std::{collections::HashMap, vec};
+use std::vec;
 
-use petgraph::graph::UnGraph;
+use petgraph::{algo::scc::tarjan_scc, graph::UnGraph};
 
 const NEUTRAL: u8 = b'.';
 const RED: u8 = b'#';
@@ -55,6 +55,8 @@ pub fn largest_area_green_red(inputs: Vec<&str>) -> i64 {
         floor.color_green_tiles((point_i, point_j));
     }
 
+    floor.fill_green_tiles();
+
     let mut largest = 0;
     let mut current;
     for (i, pi) in points.iter().enumerate() {
@@ -81,7 +83,7 @@ impl Floor {
             Point2d { x: max_x, y: max_y },
         ];
         let value = NEUTRAL;
-        let blocks = vec![Block { corners, value }];
+        let blocks = vec![Block::new(corners, value)];
         Floor { blocks }
     }
 
@@ -139,6 +141,39 @@ impl Floor {
             block.value = GREEN
         }
     }
+
+    fn fill_green_tiles(&mut self) {
+        let mut edges = Vec::new();
+        let num_blocks = self.blocks.len();
+        for i in 0..num_blocks {
+            for j in 0..i {
+                if self.blocks[i].is_neighboring(&self.blocks[j])
+                    && self.blocks[i].value == NEUTRAL
+                    && self.blocks[j].value == NEUTRAL
+                {
+                    edges.push((i as u32, j as u32));
+                }
+            }
+        }
+
+        let graph = UnGraph::<u32, ()>::from_edges(edges);
+        let interior: Vec<usize> = tarjan_scc(&graph)
+            .iter()
+            .filter(|node_ids| {
+                !node_ids.iter().any(|&node_id| {
+                    self.blocks[*graph.node_weight(node_id).unwrap() as usize].corners[0]
+                        == Point2d { x: 0, y: 0 }
+                })
+            })
+            .next()
+            .unwrap()
+            .iter()
+            .map(|&node_id| *graph.node_weight(node_id).unwrap() as usize)
+            .collect();
+        for i in interior {
+            self.blocks[i].value = GREEN
+        }
+    }
 }
 
 enum Orientation {
@@ -146,12 +181,18 @@ enum Orientation {
     Vertical,
 }
 
+#[derive(Clone)]
 struct Block {
     corners: Vec<Point2d>,
     value: u8,
 }
 
 impl Block {
+    fn new(mut corners: Vec<Point2d>, value: u8) -> Block {
+        corners.sort();
+        Block { corners, value }
+    }
+
     fn subtract(&self, point: &Point2d) -> Vec<Block> {
         if self.corners.iter().any(|corner| corner == point) {
             Vec::new()
@@ -163,9 +204,97 @@ impl Block {
             Vec::new()
         }
     }
+
+    fn sides(&self) -> Vec<Block> {
+        if self.corners.len() <= 2 {
+            vec![self.clone()]
+        } else {
+            vec![
+                Block {
+                    corners: vec![self.corners[0].clone(), self.corners[1].clone()],
+                    value: self.value,
+                },
+                Block {
+                    corners: vec![self.corners[0].clone(), self.corners[2].clone()],
+                    value: self.value,
+                },
+                Block {
+                    corners: vec![self.corners[1].clone(), self.corners[3].clone()],
+                    value: self.value,
+                },
+                Block {
+                    corners: vec![self.corners[2].clone(), self.corners[3].clone()],
+                    value: self.value,
+                },
+            ]
+        }
+    }
+
+    fn orientation(&self) -> Option<Orientation> {
+        if self.corners.len() == 2 {
+            if self.corners[0].x == self.corners[1].x {
+                Some(Orientation::Vertical)
+            } else {
+                Some(Orientation::Horizontal)
+            }
+        } else {
+            None
+        }
+    }
+
+    fn is_neighboring(&self, other: &Block) -> bool {
+        let mut result = false;
+        for self_side in self.sides().iter() {
+            for other_side in other.sides().iter() {
+                result = match (self_side.orientation(), other_side.orientation()) {
+                    (Some(Orientation::Horizontal), Some(Orientation::Horizontal)) => {
+                        (self_side.corners[0].y - other_side.corners[0].y).abs() == 1
+                            && ((self_side.corners[0].x >= other_side.corners[0].x
+                                && self_side.corners[0].x <= other_side.corners[1].x)
+                                || (self_side.corners[1].x >= other_side.corners[0].x
+                                    && self_side.corners[1].x <= other_side.corners[1].x))
+                    }
+                    (Some(Orientation::Vertical), Some(Orientation::Vertical)) => {
+                        (self_side.corners[0].x - other_side.corners[0].x).abs() == 1
+                            && ((self_side.corners[0].y >= other_side.corners[0].y
+                                && self_side.corners[0].y <= other_side.corners[1].y)
+                                || (self_side.corners[1].y >= other_side.corners[0].y
+                                    && self_side.corners[1].y <= other_side.corners[1].y))
+                    }
+                    (Some(Orientation::Horizontal), Some(Orientation::Vertical)) => false,
+                    (Some(Orientation::Horizontal), None) => {
+                        (self_side.corners[0].y - other_side.corners[0].y).abs() == 1
+                            && other_side.corners[0].x >= self_side.corners[0].x
+                            && other_side.corners[0].x <= self_side.corners[1].x
+                    }
+                    (None, Some(Orientation::Horizontal)) => {
+                        (self_side.corners[0].y - other_side.corners[0].y).abs() == 1
+                            && self_side.corners[0].x >= other_side.corners[0].x
+                            && self_side.corners[0].x <= other_side.corners[1].x
+                    }
+                    (Some(Orientation::Vertical), Some(Orientation::Horizontal)) => false,
+                    (Some(Orientation::Vertical), None) => {
+                        (self_side.corners[0].x - other_side.corners[0].x).abs() == 1
+                            && other_side.corners[0].y >= self_side.corners[0].y
+                            && other_side.corners[0].y <= self_side.corners[1].y
+                    }
+                    (None, Some(Orientation::Vertical)) => {
+                        (self_side.corners[0].x - other_side.corners[0].x).abs() == 1
+                            && self_side.corners[0].y >= other_side.corners[0].y
+                            && self_side.corners[0].y <= other_side.corners[1].y
+                    }
+                    (None, None) => self_side.corners[0].distance_sq(&other_side.corners[0]) == 1,
+                };
+                if result {
+                    break;
+                }
+            }
+        }
+        result
+    }
 }
 
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
 struct Point2d {
     x: i64,
     y: i64,
@@ -204,6 +333,10 @@ impl Point2d {
             other.y - self.y + 1
         };
         width * height
+    }
+
+    fn distance_sq(&self, other: &Point2d) -> i64 {
+        (self.x - other.x).pow(2) + (self.y - other.y).pow(2)
     }
 }
 
