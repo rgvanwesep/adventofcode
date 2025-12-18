@@ -261,7 +261,20 @@ impl Block {
                                 || (self_side.corners[1].y >= other_side.corners[0].y
                                     && self_side.corners[1].y <= other_side.corners[1].y))
                     }
-                    (Some(Orientation::Horizontal), Some(Orientation::Vertical)) => false,
+                    (Some(Orientation::Horizontal), Some(Orientation::Vertical)) => {
+                        (self_side
+                            .corners
+                            .iter()
+                            .any(|point| (point.x - other_side.corners[0].x).abs() == 1)
+                            && self_side.corners[0].y >= other_side.corners[0].y
+                            && self_side.corners[0].y <= other_side.corners[1].y)
+                            || (other_side
+                                .corners
+                                .iter()
+                                .any(|point| (point.y - self_side.corners[0].y).abs() == 1)
+                                && other_side.corners[0].x >= self_side.corners[0].x
+                                && other_side.corners[0].x <= self_side.corners[1].x)
+                    }
                     (Some(Orientation::Horizontal), None) => {
                         (self_side.corners[0].y - other_side.corners[0].y).abs() == 1
                             && other_side.corners[0].x >= self_side.corners[0].x
@@ -272,7 +285,20 @@ impl Block {
                             && self_side.corners[0].x >= other_side.corners[0].x
                             && self_side.corners[0].x <= other_side.corners[1].x
                     }
-                    (Some(Orientation::Vertical), Some(Orientation::Horizontal)) => false,
+                    (Some(Orientation::Vertical), Some(Orientation::Horizontal)) => {
+                        (other_side
+                            .corners
+                            .iter()
+                            .any(|point| (point.x - self_side.corners[0].x).abs() == 1)
+                            && other_side.corners[0].y >= self_side.corners[0].y
+                            && other_side.corners[0].y <= self_side.corners[1].y)
+                            || (self_side
+                                .corners
+                                .iter()
+                                .any(|point| (point.y - other_side.corners[0].y).abs() == 1)
+                                && self_side.corners[0].x >= other_side.corners[0].x
+                                && self_side.corners[0].x <= other_side.corners[1].x)
+                    },
                     (Some(Orientation::Vertical), None) => {
                         (self_side.corners[0].x - other_side.corners[0].x).abs() == 1
                             && other_side.corners[0].y >= self_side.corners[0].y
