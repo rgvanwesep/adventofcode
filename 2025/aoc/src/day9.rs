@@ -21,8 +21,30 @@ pub fn largest_area_green_red(inputs: Vec<&str>) -> i64 {
         .iter()
         .map(|s| Point2d::from_str(s).unwrap())
         .collect();
-    let num_red_tiles = red_tiles.len();
+    let (green_rows, green_cols) = build_green_rows_cols(&red_tiles);
+    let interior_point = find_interior_point(&red_tiles, &green_cols);
 
+    let mut green_blocks = vec![(interior_point.clone(), interior_point.clone())];
+    let mut expansion_direction = Direction::Up;
+    // TODO: Implement green tile fill
+
+    let mut largest = 0;
+    let mut current;
+    for (i, pi) in red_tiles.iter().enumerate() {
+        for pj in &red_tiles[0..i] {
+            current = pi.area(pj);
+            if current > largest {
+                largest = current
+            }
+        }
+    }
+    largest
+}
+
+fn build_green_rows_cols(
+    red_tiles: &Vec<Point2d>,
+) -> (Vec<(Point2d, Point2d)>, Vec<(Point2d, Point2d)>) {
+    let num_red_tiles = red_tiles.len();
     let mut green_rows = Vec::new();
     let mut green_cols = Vec::new();
     let mut j;
@@ -86,7 +108,10 @@ pub fn largest_area_green_red(inputs: Vec<&str>) -> i64 {
             panic!("Invalid red tile pair");
         }
     }
+    (green_rows, green_cols)
+}
 
+fn find_interior_point(red_tiles: &Vec<Point2d>, green_cols: &Vec<(Point2d, Point2d)>) -> Point2d {
     let mut max_x = 0;
     let mut max_y = 0;
     for point in red_tiles.iter() {
@@ -117,22 +142,7 @@ pub fn largest_area_green_red(inputs: Vec<&str>) -> i64 {
             break;
         }
     }
-
-    let mut green_blocks = vec![(interior_point.clone(), interior_point.clone())];
-    let mut expansion_direction = Direction::Up;
-    // TODO: Implement green tile fill
-
-    let mut largest = 0;
-    let mut current;
-    for (i, pi) in red_tiles.iter().enumerate() {
-        for pj in &red_tiles[0..i] {
-            current = pi.area(pj);
-            if current > largest {
-                largest = current
-            }
-        }
-    }
-    largest
+    interior_point
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
