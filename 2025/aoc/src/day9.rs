@@ -21,6 +21,107 @@ pub fn largest_area_green_red(inputs: Vec<&str>) -> i64 {
         .iter()
         .map(|s| Point2d::from_str(s).unwrap())
         .collect();
+    let num_red_tiles = red_tiles.len();
+
+    let mut green_rows = Vec::new();
+    let mut green_cols = Vec::new();
+    let mut j;
+    let mut red_j;
+    for (i, red_i) in red_tiles.iter().enumerate() {
+        j = (i + 1) % num_red_tiles;
+        red_j = &red_tiles[j];
+        if red_i.x == red_j.x {
+            if red_i.y < red_j.y {
+                green_cols.push((
+                    Point2d {
+                        x: red_i.x,
+                        y: red_i.y + 1,
+                    },
+                    Point2d {
+                        x: red_i.x,
+                        y: red_j.y - 1,
+                    },
+                ));
+            } else if red_i.y > red_j.y {
+                green_cols.push((
+                    Point2d {
+                        x: red_i.x,
+                        y: red_j.y + 1,
+                    },
+                    Point2d {
+                        x: red_i.x,
+                        y: red_i.y - 1,
+                    },
+                ));
+            } else {
+                panic!("Invalid red tile pair");
+            }
+        } else if red_i.y == red_j.y {
+            if red_i.x < red_j.x {
+                green_rows.push((
+                    Point2d {
+                        x: red_i.x + 1,
+                        y: red_i.y,
+                    },
+                    Point2d {
+                        x: red_j.x - 1,
+                        y: red_i.y,
+                    },
+                ));
+            } else if red_i.x > red_j.x {
+                green_cols.push((
+                    Point2d {
+                        x: red_j.x + 1,
+                        y: red_i.y,
+                    },
+                    Point2d {
+                        x: red_i.x - 1,
+                        y: red_i.y,
+                    },
+                ));
+            } else {
+                panic!("Invalid red tile pair");
+            }
+        } else {
+            panic!("Invalid red tile pair");
+        }
+    }
+
+    let mut max_x = 0;
+    let mut max_y = 0;
+    for point in red_tiles.iter() {
+        if point.x > max_x {
+            max_x = point.x
+        }
+        if point.y > max_y {
+            max_y = point.y
+        }
+    }
+    let mut rand_x: i64;
+    let mut rand_y: i64;
+    let interior_point;
+    loop {
+        rand_x = rand::random_range(0..=max_x);
+        rand_y = rand::random_range(0..=max_y);
+        if green_cols
+            .iter()
+            .filter(|(pi, pj)| rand_x < pi.x && rand_y >= pi.y && rand_y <= pj.y)
+            .count()
+            % 2
+            == 1
+        {
+            interior_point = Point2d {
+                x: rand_x,
+                y: rand_y,
+            };
+            break;
+        }
+    }
+
+    let mut green_blocks = vec![(interior_point.clone(), interior_point.clone())];
+    let mut expansion_direction = Direction::Up;
+    // TODO: Implement green tile fill
+
     let mut largest = 0;
     let mut current;
     for (i, pi) in red_tiles.iter().enumerate() {
@@ -73,6 +174,24 @@ impl Point2d {
             other.y - self.y + 1
         };
         width * height
+    }
+}
+
+enum Direction {
+    Up,
+    Right,
+    Down,
+    Left,
+}
+
+impl Direction {
+    fn next(&self) -> Self {
+        match self {
+            Self::Up => Self::Right,
+            Self::Right => Self::Down,
+            Self::Down => Self::Left,
+            Self::Left => Self::Up,
+        }
     }
 }
 
