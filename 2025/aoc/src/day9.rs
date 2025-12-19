@@ -17,14 +17,14 @@ pub fn largest_area(inputs: Vec<&str>) -> i64 {
 }
 
 pub fn largest_area_green_red(inputs: Vec<&str>) -> i64 {
-    let points: Vec<Point2d> = inputs
+    let red_tiles: Vec<Point2d> = inputs
         .iter()
         .map(|s| Point2d::from_str(s).unwrap())
         .collect();
     let mut largest = 0;
     let mut current;
-    for (i, pi) in points.iter().enumerate() {
-        for pj in &points[0..i] {
+    for (i, pi) in red_tiles.iter().enumerate() {
+        for pj in &red_tiles[0..i] {
             current = pi.area(pj);
             if current > largest {
                 largest = current
