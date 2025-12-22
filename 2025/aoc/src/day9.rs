@@ -291,24 +291,6 @@ impl Point2d {
     }
 }
 
-enum Direction {
-    Up,
-    Right,
-    Down,
-    Left,
-}
-
-impl Direction {
-    fn next(&self) -> Self {
-        match self {
-            Self::Up => Self::Right,
-            Self::Right => Self::Down,
-            Self::Down => Self::Left,
-            Self::Left => Self::Up,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
